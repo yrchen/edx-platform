@@ -5,6 +5,8 @@ Tests courseware views.py
 import cgi
 import ddt
 import json
+import urllib
+
 import unittest
 from datetime import datetime
 from nose.plugins.attrib import attr
@@ -68,16 +70,21 @@ class TestJumpTo(ModuleStoreTestCase):
     def test_jumpto_from_chapter(self):
         location = self.course_key.make_usage_key('chapter', 'Overview')
         jumpto_url = '{0}/{1}/jump_to/{2}'.format('/courses', self.course_key.to_deprecated_string(), location.to_deprecated_string())
-        expected = 'courses/edX/toy/2012_Fall/courseware/Overview/'
+        expected_url = 'courses/edX/toy/2012_Fall/courseware/Overview/'
         response = self.client.get(jumpto_url)
-        self.assertRedirects(response, expected, status_code=302, target_status_code=302)
+        self.assertRedirects(response, expected_url, status_code=302, target_status_code=302)
 
-    @unittest.skip
-    def test_jumpto_id(self):
-        jumpto_url = '{0}/{1}/jump_to_id/{2}'.format('/courses', self.course_key.to_deprecated_string(), 'Overview')
-        expected = 'courses/edX/toy/2012_Fall/courseware/Overview/'
+    def test_jumpto_id_with_slash(self):
+        jumpto_url = '{0}/{1}/jump_to_id/{2}/'.format('/courses', self.course_key.to_deprecated_string(), 'Overview')
+        expected_url = 'courses/edX/toy/2012_Fall/courseware/Overview/'
         response = self.client.get(jumpto_url)
-        self.assertRedirects(response, expected, status_code=302, target_status_code=302)
+        self.assertRedirects(response, expected_url, status_code=302, target_status_code=302)
+
+    def test_jumpto_id_without_slash(self):
+        jumpto_url = '{0}/{1}/jump_to_id/{2}'.format('/courses', self.course_key.to_deprecated_string(), 'Overview')
+        expected_url = jumpto_url + '/'
+        response = self.client.get(jumpto_url)
+        self.assertRedirects(response, expected_url, status_code=301, target_status_code=302)
 
     def test_jumpto_from_section(self):
         course = CourseFactory.create()
@@ -160,9 +167,16 @@ class TestJumpTo(ModuleStoreTestCase):
 
     def test_jumpto_id_invalid_location(self):
         location = Location('edX', 'toy', 'NoSuchPlace', None, None, None)
-        jumpto_url = '{0}/{1}/jump_to_id/{2}'.format('/courses', self.course_key.to_deprecated_string(), location.to_deprecated_string())
+        jumpto_url = '{0}/{1}/jump_to_id/{2}/'.format('/courses', self.course_key.to_deprecated_string(), location.to_deprecated_string())
         response = self.client.get(jumpto_url)
         self.assertEqual(response.status_code, 404)
+
+    def test_jumpto_id_invalid_location_without_slash(self):
+        location = Location('edX', 'toy', 'NoSuchPlace', None, None, None)
+        jumpto_url = '{0}/{1}/jump_to_id/{2}'.format('/courses', self.course_key.to_deprecated_string(), location.to_deprecated_string())
+        expected_url = urllib.quote(jumpto_url + '/')
+        response = self.client.get(jumpto_url)
+        self.assertRedirects(response, expected_url, status_code=301, target_status_code=404)
 
 
 @attr('shard_1')
