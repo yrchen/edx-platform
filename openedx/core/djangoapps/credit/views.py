@@ -1,21 +1,13 @@
 """
 Views for the credit Django app.
 
-TODO: description of protocol
-
-Requests to and from the credit provider will be digitally signed as follows:
-
-1) Encode all parameters of the request (except the signature) in a string.
-2) Encode each key/value pair as a string of the form “{key}:{value}”.
-3) Concatenate key/value pairs in ascending alphabetical order by key.
-4) Calculate the HMAC-SHA256 digest of the encoded request parameters, using a 32-character shared secret key.
-5) Encode the digest in hexadecimal.
+TODO: description of API contract with the credit provider.
 
 """
 from django.http import HttpResponse
 
 
-def create_credit_request(request):
+def create_credit_request(request, provider_id):
     """
     Initiate a request for credit in a course.
 
@@ -105,7 +97,7 @@ def credit_provider_callback(request, provider_id):
 
         * request_uuid (string): The UUID of the request.
 
-        * status (string): Either “approved” or “rejected”.
+        * status (string): Either "approved" or "rejected".
 
         * timestamp (string): The datetime at which the POST request was made, in ISO 8601 format.
             This will always include time-zone information.

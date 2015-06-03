@@ -10,7 +10,7 @@ urlpatterns = patterns(
     '',
 
     url(
-        r"^v1/provider/(?<provider_id>[^/]+)/request/$",
+        r"^v1/provider/(?P<provider_id>[^/]+)/request/$",
         create_credit_request,
         name="credit_create_request"
     ),
