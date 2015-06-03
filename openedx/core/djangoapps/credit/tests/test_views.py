@@ -5,6 +5,7 @@ import json
 import datetime
 import pytz
 
+import ddt
 from django.test import TestCase
 from django.core.urlresolvers import reverse
 
@@ -20,6 +21,7 @@ from openedx.core.djangoapps.credit.models import (
 )
 
 
+@ddt.ddt
 class CreditProviderViewTests(TestCase):
     """
     Tests for HTTP end-points used to issue requests to credit providers
@@ -27,6 +29,7 @@ class CreditProviderViewTests(TestCase):
     """
 
     USERNAME = "ron"
+    PASSWORD = "password"
     PROVIDER_ID = "hogwarts"
     COURSE_KEY = CourseKey.from_string("edX/DemoX/Demo_Course")
     FINAL_GRADE = 0.95
@@ -37,8 +40,10 @@ class CreditProviderViewTests(TestCase):
         """
         super(CreditProviderViewTests, self).setUp()
 
-        # Create the test user
-        self.user = UserFactory(username=self.USERNAME)
+        # Create the test user and log in
+        self.user = UserFactory(username=self.USERNAME, password=self.PASSWORD)
+        success = self.client.login(username=self.USERNAME, password=self.PASSWORD)
+        self.assertTrue(success, msg="Could not log in")
 
         # Enable the course for credit
         credit_course = CreditCourse.objects.create(
@@ -108,6 +113,28 @@ class CreditProviderViewTests(TestCase):
         requests = api.get_credit_requests_for_user(self.USERNAME)
         self.assertEqual(len(requests), 1)
         self.assertEqual(requests[0]["status"], "approved")
+
+    def test_request_credit_anonymous_user(self):
+        self.client.logout()
+        response = self._create_credit_request(self.USERNAME, self.COURSE_KEY)
+        self.assertEqual(response.status_code, 403)
+
+    def test_request_credit_for_another_user(self):
+        response = self._create_credit_request("another_user", self.COURSE_KEY)
+        self.assertEqual(response.status_code, 403)
+
+    @ddt.data(
+        # Invalid JSON
+        "{",
+
+        # Missing required parameters
+        json.dumps({"username": USERNAME}),
+        json.dumps({"course_key": unicode(COURSE_KEY)}),
+    )
+    def test_create_credit_request_invalid_parameters(self, request_data):
+        url = reverse("credit_create_request", args=[self.PROVIDER_ID])
+        response = self.client.post(url, data=request_data, content_type="application/json")
+        self.assertEqual(response.status_code, 400)
 
     def _create_credit_request(self, username, course_key):
         """

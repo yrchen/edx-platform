@@ -4,9 +4,17 @@ Views for the credit Django app.
 TODO: description of API contract with the credit provider.
 
 """
-from django.http import HttpResponse
+import json
+
+from django.http import (
+    HttpResponse,
+    HttpResponseBadRequest,
+    HttpResponseForbidden
+)
+from django.views.decorators.http import require_POST
 
 
+@require_POST
 def create_credit_request(request, provider_id):
     """
     Initiate a request for credit in a course.
@@ -73,9 +81,29 @@ def create_credit_request(request, provider_id):
             - The provider does not exist.
 
     """
-    return HttpResponse("Create credit request!")
+    # Validate parameters
+    try:
+        parameters = json.loads(request.body)
+    except (TypeError, ValueError):
+        return HttpResponseBadRequest("TODO")
+
+    if not isinstance(parameters, dict):
+        return HttpResponseBadRequest("TODO")
+
+    if "username" not in parameters:
+        return HttpResponseBadRequest("TODO")
+    elif "course_key" not in parameters:
+        return HttpResponseBadRequest("TODO")
+
+    # Check user authorization
+    if not (request.user and request.user.username == parameters["username"]):
+        return HttpResponseForbidden("TODO")
+
+    # DEBUG
+    return HttpResponse("Credit")
 
 
+@require_POST
 def credit_provider_callback(request, provider_id):
     """
     Callback end-point used by credit providers to approve or reject
