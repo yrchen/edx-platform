@@ -130,6 +130,9 @@ class CreditProviderViewTests(TestCase):
         # Missing required parameters
         json.dumps({"username": USERNAME}),
         json.dumps({"course_key": unicode(COURSE_KEY)}),
+
+        # Invalid course key format
+        json.dumps({"username": USERNAME, "course_key": "invalid"}),
     )
     def test_create_credit_request_invalid_parameters(self, request_data):
         url = reverse("credit_create_request", args=[self.PROVIDER_ID])

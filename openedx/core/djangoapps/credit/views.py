@@ -13,6 +13,12 @@ from django.http import (
 )
 from django.views.decorators.http import require_POST
 
+from opaque_keys.edx.keys import CourseKey
+from opaque_keys import InvalidKeyError
+
+from util.json_request import JsonResponse
+from openedx.core.djangoapps.credit import api
+
 
 @require_POST
 def create_credit_request(request, provider_id):
@@ -95,12 +101,31 @@ def create_credit_request(request, provider_id):
     elif "course_key" not in parameters:
         return HttpResponseBadRequest("TODO")
 
+    try:
+        username = parameters["username"]
+        course_key = CourseKey.from_string(parameters["course_key"])
+    except InvalidKeyError:
+        return HttpResponseBadRequest("TODO")
+
     # Check user authorization
-    if not (request.user and request.user.username == parameters["username"]):
+    if not (request.user and request.user.username == username):
         return HttpResponseForbidden("TODO")
 
+    # Initiate the request
+    try:
+        request_params = api.create_credit_request(course_key, provider_id, username)
+    except:
+        # TODO
+        pass
+
+    # TODO: sign the request
+
     # DEBUG
-    return HttpResponse("Credit")
+    return JsonResponse({
+        "url": "foobar",
+        "method": "POST",
+        "parameters": request_params
+    })
 
 
 @require_POST
