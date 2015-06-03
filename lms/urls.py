@@ -89,6 +89,9 @@ urlpatterns = (
 
     # Profile Images API endpoints
     url(r'^api/profile_images/', include('openedx.core.djangoapps.profile_images.urls')),
+
+    # Credit API end-points
+    url(r'^api/credit/', include('openedx.core.djangoapps.credit.urls')),
 )
 
 if settings.FEATURES["ENABLE_COMBINED_LOGIN_REGISTRATION"]:
