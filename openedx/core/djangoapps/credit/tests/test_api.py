@@ -7,6 +7,7 @@ import ddt
 import pytz
 import dateutil.parser as date_parser
 from django.test import TestCase
+from django.test.utils import override_settings
 from django.db import connection, transaction
 
 from opaque_keys.edx.keys import CourseKey
@@ -30,6 +31,12 @@ from openedx.core.djangoapps.credit.models import (
 )
 
 
+TEST_CREDIT_PROVIDER_SECRET_KEY = "931433d583c84ca7ba41784bad3232e6"
+
+
+@override_settings(CREDIT_PROVIDER_SECRET_KEYS={
+    "hogwarts": TEST_CREDIT_PROVIDER_SECRET_KEY
+})
 class CreditApiTestBase(TestCase):
     """
     Base class for test cases of the credit API.

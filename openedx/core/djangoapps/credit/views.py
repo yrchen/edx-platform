@@ -163,4 +163,34 @@ def credit_provider_callback(request, provider_id):
         * 404 Not Found: Could not find a request with the specified UUID associated with this provider.
 
     """
-    return HttpResponse("Credit provider callback: " + provider_id)
+    # Validate parameters
+    try:
+        parameters = json.loads(request.body)
+    except (TypeError, ValueError):
+        return HttpResponseBadRequest("TODO")
+
+    if not isinstance(parameters, dict):
+        return HttpResponseBadRequest("TODO")
+
+    if "request_uuid" not in parameters:
+        return HttpResponseBadRequest("TODO")
+    elif "status" not in parameters:
+        return HttpResponseBadRequest("TODO")
+    elif "timestamp" not in parameters:
+        return HttpResponseBadRequest("TODO")
+    elif "signature" not in parameters:
+        return HttpResponseBadRequest("TODO")
+
+    # TODO -- validate the signature
+    # TODO -- validate the timestamp
+
+    try:
+        api.update_credit_request_status(
+            parameters["request_uuid"],
+            parameters["status"]
+        )
+    except:
+        # TODO
+        raise
+    else:
+        return HttpResponse()
