@@ -4,7 +4,7 @@ TODO: more description here.
 Requests to and from the credit provider will be digitally signed as follows:
 
 1) Encode all parameters of the request (except the signature) in a string.
-2) Encode each key/value pair as a string of the form “{key}:{value}”.
+2) Encode each key/value pair as a string of the form "{key}:{value}".
 3) Concatenate key/value pairs in ascending alphabetical order by key.
 4) Calculate the HMAC-SHA256 digest of the encoded request parameters, using a 32-character shared secret key.
 5) Encode the digest in hexadecimal.
@@ -12,14 +12,6 @@ Requests to and from the credit provider will be digitally signed as follows:
 
 import hashlib
 import hmac
-
-
-def shared_secret_for_provider(provider_id):
-    """
-    TODO: retrieve the shared secret for the provider
-    from auth settings.
-    """
-    pass
 
 
 def signature(params, shared_secret):

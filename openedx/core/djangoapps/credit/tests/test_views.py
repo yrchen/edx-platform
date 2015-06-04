@@ -7,11 +7,13 @@ import pytz
 
 import ddt
 from django.test import TestCase
+from django.test.utils import override_settings
 from django.core.urlresolvers import reverse
 
 from student.tests.factories import UserFactory
 from opaque_keys.edx.keys import CourseKey
 from openedx.core.djangoapps.credit import api
+from openedx.core.djangoapps.credit.signature import signature
 from openedx.core.djangoapps.credit.models import (
     CreditCourse,
     CreditProvider,
@@ -21,7 +23,13 @@ from openedx.core.djangoapps.credit.models import (
 )
 
 
+TEST_CREDIT_PROVIDER_SECRET_KEY = "931433d583c84ca7ba41784bad3232e6"
+
+
 @ddt.ddt
+@override_settings(CREDIT_PROVIDER_SECRET_KEYS={
+    "hogwarts": TEST_CREDIT_PROVIDER_SECRET_KEY
+})
 class CreditProviderViewTests(TestCase):
     """
     Tests for HTTP end-points used to issue requests to credit providers
@@ -29,8 +37,10 @@ class CreditProviderViewTests(TestCase):
     """
 
     USERNAME = "ron"
+    USER_FULL_NAME = "Ron Weasley"
     PASSWORD = "password"
     PROVIDER_ID = "hogwarts"
+    PROVIDER_URL = "https://credit.example.com/request"
     COURSE_KEY = CourseKey.from_string("edX/DemoX/Demo_Course")
     FINAL_GRADE = 0.95
 
@@ -42,6 +52,9 @@ class CreditProviderViewTests(TestCase):
 
         # Create the test user and log in
         self.user = UserFactory(username=self.USERNAME, password=self.PASSWORD)
+        self.user.profile.name = self.USER_FULL_NAME
+        self.user.profile.save()
+
         success = self.client.login(username=self.USERNAME, password=self.PASSWORD)
         self.assertTrue(success, msg="Could not log in")
 
@@ -52,7 +65,11 @@ class CreditProviderViewTests(TestCase):
         )
 
         # Configure a credit provider for the course
-        credit_provider = CreditProvider.objects.create(provider_id=self.PROVIDER_ID)
+        credit_provider = CreditProvider.objects.create(
+            provider_id=self.PROVIDER_ID,
+            enable_integration=True,
+            url=self.PROVIDER_URL,
+        )
         credit_course.providers.add(credit_provider)
         credit_course.save()
 
@@ -89,18 +106,27 @@ class CreditProviderViewTests(TestCase):
 
         # Check request parameters
         content = json.loads(response.content)
-        self.assertEqual(content["url"], "TODO")
+        self.assertEqual(content["url"], self.PROVIDER_URL)
         self.assertEqual(content["method"], "POST")
         self.assertEqual(len(content["parameters"]["request_uuid"]), 32)
-        self.assertEqual(content["parameters"]["course_org"], "TODO")
-        self.assertEqual(content["parameters"]["course_num"], "TODO")
-        self.assertEqual(content["parameters"]["course_run"], "TODO")
-        self.assertEqual(content["parameters"]["final_grade"], 0.95)
-        self.assertEqual(content["parameters"]["user_username"], "TODO")
-        self.assertEqual(content["parameters"]["user_full_name"], "TODO")
-        self.assertEqual(content["parameters"]["user_mailing_address"], "TODO")
-        self.assertEqual(content["parameters"]["user_country"], "TODO")
-        self.assertEqual(content["parameters"]["signature"], "TODO")
+        self.assertEqual(content["parameters"]["course_org"], "edX")
+        self.assertEqual(content["parameters"]["course_num"], "DemoX")
+        self.assertEqual(content["parameters"]["course_run"], "Demo_Course")
+        self.assertEqual(content["parameters"]["final_grade"], self.FINAL_GRADE)
+        self.assertEqual(content["parameters"]["user_username"], self.USERNAME)
+        self.assertEqual(content["parameters"]["user_full_name"], self.USER_FULL_NAME)
+        self.assertEqual(content["parameters"]["user_mailing_address"], "")
+        self.assertEqual(content["parameters"]["user_country"], "")
+
+        # The signature is going to change each test run because the request
+        # is assigned a different UUID each time.
+        # For this reason, we use the signature function directly
+        # (the "signature" parameter will be ignored when calculating the signature).
+        # Other unit tests verify that the signature function is working correctly.
+        self.assertEqual(
+            content["parameters"]["signature"],
+            signature(content["parameters"], TEST_CREDIT_PROVIDER_SECRET_KEY)
+        )
 
         # Simulate a response from the credit provider
         response = self._credit_provider_callback(

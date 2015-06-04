@@ -9,6 +9,7 @@ successful completion of a course on EdX
 import logging
 
 from django.db import models, connection
+from django.utils.translation import ugettext_lazy
 
 from jsonfield.fields import JSONField
 from model_utils.models import TimeStampedModel
@@ -24,8 +25,42 @@ class CreditProvider(TimeStampedModel):
     Each provider is identified by unique ID (e.g., 'ASU').
     """
 
-    provider_id = models.CharField(max_length=255, db_index=True, unique=True)
-    display_name = models.CharField(max_length=255)
+    provider_id = models.CharField(
+        max_length=255,
+        db_index=True,
+        unique=True,
+        help_text=ugettext_lazy(
+            "Unique identifier for this credit provider. "
+            "Only alphanumeric characters and hyphens (-) are allowed. "
+            "The identifier is case-sensitive."
+        )
+    )
+
+    display_name = models.CharField(
+        max_length=255,
+        help_text=ugettext_lazy("Name of the credit provider displayed to users")
+    )
+
+    enable_integration = models.BooleanField(
+        default=False,
+        help_text=ugettext_lazy(
+            "When true, automatically notify the credit provider "
+            "when a user requests credit. "
+            "In order for this to work, a shared secret key MUST be configured "
+            "for the credit provider in secure auth settings."
+        )
+    )
+
+    url = models.URLField(
+        default="",
+        help_text=ugettext_lazy(
+            "URL of the credit provider.  If automatic integration is "
+            "enabled, this will the the end-point that we POST to "
+            "to notify the provider of a credit request.  Otherwise, the "
+            "user will be shown a link to this URL, so the user can "
+            "request credit from the provider directly."
+        )
+    )
 
 
 class CreditCourse(models.Model):

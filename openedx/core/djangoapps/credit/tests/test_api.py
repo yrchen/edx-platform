@@ -37,6 +37,7 @@ class CreditApiTestBase(TestCase):
 
     PROVIDER_ID = "hogwarts"
     PROVIDER_NAME = "Hogwarts School of Witchcraft and Wizardry"
+    PROVIDER_URL = "https://credit.example.com/request"
 
     def setUp(self, **kwargs):
         super(CreditApiTestBase, self).setUp()
@@ -48,7 +49,12 @@ class CreditApiTestBase(TestCase):
         credit_course.save()
 
         # Associate a credit provider with the course.
-        credit_provider = CreditProvider(provider_id=self.PROVIDER_ID, display_name=self.PROVIDER_NAME)
+        credit_provider = CreditProvider(
+            provider_id=self.PROVIDER_ID,
+            display_name=self.PROVIDER_NAME,
+            url=self.PROVIDER_URL,
+            enable_integration=True,
+        )
         credit_provider.save()
         credit_course.providers.add(credit_provider)
 
@@ -160,19 +166,6 @@ class CreditRequirementApiTests(CreditApiTestBase):
         self.assertEqual(len(grade_req), 1)
         self.assertEqual(grade_req[0].active, False)
 
-    def test_requirements_to_disable(self):
-        self.add_credit_course()
-        requirements = [
-            {
-                "namespace": "grade",
-                "name": "grade",
-                "display_name": "Grade",
-                "criteria": {
-                    "min_grade": 0.8
-                }
-            }
-        ]
-
 
 @ddt.ddt
 class CreditProviderIntegrationApiTests(CreditApiTestBase):
@@ -208,42 +201,66 @@ class CreditProviderIntegrationApiTests(CreditApiTestBase):
         # Initiate a credit request
         request = api.create_credit_request(self.course_key, self.PROVIDER_ID, self.USER_INFO['username'])
 
+        # Validate the URL and method
+        self.assertIn('url', request)
+        self.assertEqual(request['url'], self.PROVIDER_URL)
+        self.assertIn('method', request)
+        self.assertEqual(request['method'], "POST")
+
+        self.assertIn('parameters', request)
+        parameters = request['parameters']
+
         # Validate the UUID
-        self.assertIn('uuid', request)
-        self.assertEqual(len(request['uuid']), 32)
+        self.assertIn('request_uuid', parameters)
+        self.assertEqual(len(parameters['request_uuid']), 32)
 
         # Validate the timestamp
-        self.assertIn('timestamp', request)
-        parsed_date = date_parser.parse(request['timestamp'])
+        self.assertIn('timestamp', parameters)
+        parsed_date = date_parser.parse(parameters['timestamp'])
         self.assertTrue(parsed_date < datetime.datetime.now(pytz.UTC))
 
         # Validate course information
-        self.assertIn('course_org', request)
-        self.assertEqual(request['course_org'], self.course_key.org)
-        self.assertIn('course_num', request)
-        self.assertEqual(request['course_num'], self.course_key.course)
-        self.assertIn('course_run', request)
-        self.assertEqual(request['course_run'], self.course_key.run)
-        self.assertIn('final_grade', request)
-        self.assertEqual(request['final_grade'], self.FINAL_GRADE)
+        self.assertIn('course_org', parameters)
+        self.assertEqual(parameters['course_org'], self.course_key.org)
+        self.assertIn('course_num', parameters)
+        self.assertEqual(parameters['course_num'], self.course_key.course)
+        self.assertIn('course_run', parameters)
+        self.assertEqual(parameters['course_run'], self.course_key.run)
+        self.assertIn('final_grade', parameters)
+        self.assertEqual(parameters['final_grade'], self.FINAL_GRADE)
 
         # Validate user information
         for key in self.USER_INFO.keys():
-            request_key = 'user_{key}'.format(key=key)
-            self.assertIn(request_key, request)
-            self.assertEqual(request[request_key], self.USER_INFO[key])
+            param_key = 'user_{key}'.format(key=key)
+            self.assertIn(param_key, parameters)
+            self.assertEqual(parameters[param_key], self.USER_INFO[key])
+
+    def test_credit_request_disable_integration(self):
+        self._configure_credit()
+        CreditProvider.objects.all().update(enable_integration=False)
+
+        # Initiate a request with automatic integration disabled
+        request = api.create_credit_request(self.course_key, self.PROVIDER_ID, self.USER_INFO['username'])
+
+        # We get a URL and a GET method, so we can provide students
+        # with a link to the credit provider, where they can request
+        # credit directly.
+        self.assertIn("url", request)
+        self.assertEqual(request["url"], self.PROVIDER_URL)
+        self.assertIn("method", request)
+        self.assertEqual(request["method"], "GET")
 
     @ddt.data("approved", "rejected")
     def test_credit_request_status(self, status):
         self._configure_credit()
 
-        request = api.create_credit_request(self.course_key, self.PROVIDER_ID, self.USER_INFO['username'])
+        request = api.create_credit_request(self.course_key, self.PROVIDER_ID, self.USER_INFO["username"])
 
         # Initial status should be "pending"
         self._assert_credit_status("pending")
 
         # Update the status
-        api.update_credit_request_status(request['uuid'], status)
+        api.update_credit_request_status(request["parameters"]["request_uuid"], status)
         self._assert_credit_status(status)
 
     def test_query_counts(self):
@@ -260,37 +277,40 @@ class CreditProviderIntegrationApiTests(CreditApiTestBase):
             request = api.create_credit_request(self.course_key, self.PROVIDER_ID, self.USER_INFO['username'])
 
         with self.assertNumQueries(2):
-            api.update_credit_request_status(request['uuid'], "approved")
+            api.update_credit_request_status(request["parameters"]["request_uuid"], "approved")
 
         with self.assertNumQueries(1):
-            api.get_credit_requests_for_user(self.USER_INFO['username'])
+            api.get_credit_requests_for_user(self.USER_INFO["username"])
 
     def test_reuse_credit_request(self):
         self._configure_credit()
 
         # Create the first request
-        first_request = api.create_credit_request(self.course_key, self.PROVIDER_ID, self.USER_INFO['username'])
+        first_request = api.create_credit_request(self.course_key, self.PROVIDER_ID, self.USER_INFO["username"])
 
         # Update the user's profile information, then attempt a second request
         self.user.profile.name = "Bobby"
         self.user.profile.save()
-        second_request = api.create_credit_request(self.course_key, self.PROVIDER_ID, self.USER_INFO['username'])
+        second_request = api.create_credit_request(self.course_key, self.PROVIDER_ID, self.USER_INFO["username"])
 
         # Request UUID should be the same
-        self.assertEqual(first_request['uuid'], second_request['uuid'])
+        self.assertEqual(
+            first_request["parameters"]["request_uuid"],
+            second_request["parameters"]["request_uuid"]
+        )
 
         # Request should use the updated information
-        self.assertEqual(second_request['user_full_name'], "Bobby")
+        self.assertEqual(second_request["parameters"]["user_full_name"], "Bobby")
 
     @ddt.data("approved", "rejected")
     def test_cannot_make_credit_request_after_response(self, status):
         self._configure_credit()
 
         # Create the first request
-        request = api.create_credit_request(self.course_key, self.PROVIDER_ID, self.USER_INFO['username'])
+        request = api.create_credit_request(self.course_key, self.PROVIDER_ID, self.USER_INFO["username"])
 
         # Provider updates the status
-        api.update_credit_request_status(request['uuid'], status)
+        api.update_credit_request_status(request["parameters"]["request_uuid"], status)
 
         # Attempting a second request raises an exception
         with self.assertRaises(RequestAlreadyCompleted):
@@ -310,8 +330,8 @@ class CreditProviderIntegrationApiTests(CreditApiTestBase):
         self.user.profile.save()
 
         # Request should include an empty mailing address field
-        request = api.create_credit_request(self.course_key, self.PROVIDER_ID, self.USER_INFO['username'])
-        self.assertEqual(request["user_mailing_address"], "")
+        request = api.create_credit_request(self.course_key, self.PROVIDER_ID, self.USER_INFO["username"])
+        self.assertEqual(request["parameters"]["user_mailing_address"], "")
 
     def test_create_request_null_country(self):
         self._configure_credit()
@@ -324,8 +344,8 @@ class CreditProviderIntegrationApiTests(CreditApiTestBase):
         transaction.commit_unless_managed()
 
         # Request should include an empty country field
-        request = api.create_credit_request(self.course_key, self.PROVIDER_ID, self.USER_INFO['username'])
-        self.assertEqual(request["user_country"], "")
+        request = api.create_credit_request(self.course_key, self.PROVIDER_ID, self.USER_INFO["username"])
+        self.assertEqual(request["parameters"]["user_country"], "")
 
     def test_user_has_no_final_grade(self):
         self._configure_credit()
@@ -342,13 +362,13 @@ class CreditProviderIntegrationApiTests(CreditApiTestBase):
         grade_status.save()
 
         with self.assertRaises(UserIsNotEligible):
-            api.create_credit_request(self.course_key, self.PROVIDER_ID, self.USER_INFO['username'])
+            api.create_credit_request(self.course_key, self.PROVIDER_ID, self.USER_INFO["username"])
 
     def test_update_invalid_credit_status(self):
         self._configure_credit()
-        request = api.create_credit_request(self.course_key, self.PROVIDER_ID, self.USER_INFO['username'])
+        request = api.create_credit_request(self.course_key, self.PROVIDER_ID, self.USER_INFO["username"])
         with self.assertRaises(InvalidCreditStatus):
-            api.update_credit_request_status(request['uuid'], "invalid")
+            api.update_credit_request_status(request["parameters"]["request_uuid"], "invalid")
 
     def test_update_credit_request_not_found(self):
         self._configure_credit()
@@ -357,7 +377,7 @@ class CreditProviderIntegrationApiTests(CreditApiTestBase):
 
     def test_get_credit_requests_no_requests(self):
         self._configure_credit()
-        requests = api.get_credit_requests_for_user(self.USER_INFO['username'])
+        requests = api.get_credit_requests_for_user(self.USER_INFO["username"])
         self.assertEqual(requests, [])
 
     def _configure_credit(self, requirement_status="satisfied"):
@@ -370,7 +390,7 @@ class CreditProviderIntegrationApiTests(CreditApiTestBase):
             active=True
         )
         status = CreditRequirementStatus.objects.create(
-            username=self.USER_INFO['username'],
+            username=self.USER_INFO["username"],
             requirement=requirement,
         )
         status.status = requirement_status
@@ -381,12 +401,12 @@ class CreditProviderIntegrationApiTests(CreditApiTestBase):
 
         if requirement_status == "satisfied":
             CreditEligibility.objects.create(
-                username=self.USER_INFO['username'],
+                username=self.USER_INFO["username"],
                 course=CreditCourse.objects.get(course_key=self.course_key),
                 provider=CreditProvider.objects.get(provider_id=self.PROVIDER_ID)
             )
 
     def _assert_credit_status(self, expected_status):
         """Check the user's credit status. """
-        statuses = api.get_credit_requests_for_user(self.USER_INFO['username'])
+        statuses = api.get_credit_requests_for_user(self.USER_INFO["username"])
         self.assertEqual(statuses[0]["status"], expected_status)

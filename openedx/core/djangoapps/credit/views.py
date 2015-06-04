@@ -113,19 +113,12 @@ def create_credit_request(request, provider_id):
 
     # Initiate the request
     try:
-        request_params = api.create_credit_request(course_key, provider_id, username)
+        credit_request = api.create_credit_request(course_key, provider_id, username)
     except:
         # TODO
-        pass
-
-    # TODO: sign the request
-
-    # DEBUG
-    return JsonResponse({
-        "url": "foobar",
-        "method": "POST",
-        "parameters": request_params
-    })
+        raise
+    else:
+        return JsonResponse(credit_request)
 
 
 @require_POST
