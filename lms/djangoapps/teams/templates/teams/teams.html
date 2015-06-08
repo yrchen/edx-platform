@@ -15,6 +15,8 @@
     <div class="teams-wrapper">
         <section class="teams-content">
         </section>
+        <div class="test-card"></div>
+        <div class="test-card-2"></div>
     </div>
 </div>
 
@@ -23,6 +25,36 @@
     (function (require) {
         require(['teams/js/teams_tab_factory'], function (TeamsTabFactory) {
             var pageView = new TeamsTabFactory();
+        });
+    }).call(this, require || RequireJS.require);
+</script>
+<script type="text/javascript">
+    (function (require) {
+        require(['jquery', 'backbone', 'teams/js/views/topic_card'], function ($, Backbone, TopicCardView) {
+            new TopicCardView({
+                model: new Backbone.Model({
+                    name: 'Renewable Energy Production',
+                    description: 'Teams in this topic will be exploring how changes in renewable energy production will change our day to day lives.',
+                    team_count: 34,
+                    topic_id: 'renewable_energy'
+                }),
+
+                el: $(".test-card"),
+
+                configuration: 'card'
+            });
+            new TopicCardView({
+                model: new Backbone.Model({
+                    name: 'Renewable Energy Production',
+                    description: 'Teams in this topic will be exploring how changes in renewable energy production will change our day to day lives.',
+                    team_count: 34,
+                    topic_id: 'renewable_energy'
+                }),
+
+                el: $(".test-card-2"),
+
+                configuration: 'list'
+            });
         });
     }).call(this, require || RequireJS.require);
 </script>

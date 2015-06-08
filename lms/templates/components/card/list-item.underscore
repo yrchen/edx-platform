@@ -1,0 +1,10 @@
+<div class="card-list-item">
+    <h1><%- name %></h1>
+    <p><%- description %></p>
+    <p class="action"><%- action_text %></p>
+    <ul>
+        <% _.each(items, function (item) { %>
+            <li><%- item %></li>
+        <% }) %>
+    </ul>
+</div>
