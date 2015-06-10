@@ -30,16 +30,13 @@ define(['jquery', 'backbone'], function ($, Backbone) {
                 term = this.$searchField.val();
             }
             this.trigger('search', $.trim(term));
-            this.$message.empty();
         },
 
         clearSearch: function () {
-            this.$message.empty();
             this.$searchField.val('');
         },
 
         showLoadingIndicator: function () {
-            this.$message.empty();
             this.$loadingIndicator.removeClass('hidden');
         },
 
