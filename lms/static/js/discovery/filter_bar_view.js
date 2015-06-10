@@ -14,10 +14,7 @@ define([
     return Backbone.View.extend({
 
         el: '#filter-bar',
-
-        tagName: 'div',
         templateId: '#filter_bar-tpl',
-        className: 'filters hidden',
 
         events: {
             'click #clear-all-filters': 'clearAll',
