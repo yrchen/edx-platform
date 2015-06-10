@@ -6,8 +6,9 @@
             'gettext',
             'js/components/header/views/header',
             'js/components/header/models/header',
-            'js/components/tabbed/views/tabbed_view'],
-           function (Backbone, _, gettext, HeaderView, HeaderModel, TabbedView) {
+            'js/components/tabbed/views/tabbed_view',
+            'teams/js/views/teams_list'],
+           function (Backbone, _, gettext, HeaderView, HeaderModel, TabbedView, TeamsListView) {
                var TeamTabView = Backbone.View.extend({
                    initialize: function() {
                        this.headerModel = new HeaderModel({
@@ -35,7 +36,7 @@
                            }, {
                                title: gettext('Browse'),
                                url: 'browse',
-                               view: new TempTabView({text: 'Browse team topics here.'})
+                               view: new TeamsListView({collection: ['a', 'b', 'c']})
                            }]
                        });
                        Backbone.history.start();
