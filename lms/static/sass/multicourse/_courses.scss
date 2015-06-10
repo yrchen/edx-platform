@@ -278,7 +278,7 @@ $facet-background-color: #007db8;
     background: $blue;
     position: absolute;
     top: ($baseline*0.7); // same as padding rule for .discovery-submit
-  } 
+  }
 }
 
 // +Filters - Search
@@ -419,7 +419,7 @@ $facet-background-color: #007db8;
   .facet-list {
     @extend %ui-no-list;
     @include clearfix();
-    padding-bottom: ($baseline/2); 
+    padding-bottom: ($baseline/2);
   }
 
   .facet-option {
