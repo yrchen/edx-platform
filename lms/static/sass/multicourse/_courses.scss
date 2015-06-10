@@ -65,6 +65,7 @@ $facet-background-color: #007db8;
 
       .courses-listing .courses-listing-item {
         @include fill-parent();
+        @include animation(fade-in-animation 0.3s);
         margin: 0 0 ($baseline*1.5) 0;
         max-height: $course-card-height;
 
