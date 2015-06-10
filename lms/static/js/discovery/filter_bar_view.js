@@ -28,8 +28,8 @@ define([
             this.collection = new FiltersCollection([]);
             this.tpl = _.template($(this.templateId).html());
             this.$el.html(this.tpl());
-            this.hideClearAllButton();
             this.filtersList = this.$el.find('ul');
+            this.$el.addClass('animate');
         },
 
         render: function () {
@@ -59,9 +59,7 @@ define([
                 this.collection.add(filter);
                 this.filtersList.append(filterView.render().el);
                 this.trigger('search', this.getSearchTerm(), this.collection);
-                if (this.$el.hasClass('hidden')) {
-                    this.showClearAllButton();
-                }
+                this.show();
             }
         },
 
@@ -87,12 +85,12 @@ define([
             this.trigger('clear');
         },
 
-        showClearAllButton: function () {
-            this.$el.removeClass('hidden');
+        show: function () {
+            this.$el.removeClass('slide-up');
         },
 
-        hideClearAllButton: function() {
-            this.$el.addClass('hidden');
+        hide: function() {
+            this.$el.addClass('slide-up');
         },
 
         getSearchTerm: function() {

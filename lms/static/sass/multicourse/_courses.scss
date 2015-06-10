@@ -285,13 +285,23 @@ $facet-background-color: #007db8;
 .find-courses {
 
   .filters {
-    @include clearfix();
     margin-top: ($baseline/2);
-    border-top: 2px solid $courseware-button-border-color;
-    border-bottom: 2px solid $courseware-button-border-color;
-    width: 100%;
-    height: auto;
     max-height: ($baseline*10);
+    overflow: hidden;
+
+    &.animate {
+      @include transition(max-height 0.3s);
+    }
+
+    &.slide-up {
+      max-height: 0;
+    }
+
+    .filters-inner {
+      @include clearfix();
+      border-top: 2px solid $courseware-button-border-color;
+      border-bottom: 2px solid $courseware-button-border-color;
+    }
 
     ul {
       @include padding-left(0);

@@ -26,8 +26,8 @@ define(['backbone', 'course_discovery_meanings'], function(Backbone, meanings) {
 
         dispatcher.listenTo(filters, 'clear', function () {
             form.clearSearch();
+            filters.hide();
             collection.performSearch();
-            filters.hideClearAllButton();
         });
 
         dispatcher.listenTo(results, 'next', function () {
