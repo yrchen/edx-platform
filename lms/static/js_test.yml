@@ -64,7 +64,7 @@ lib_paths:
 
 # Paths to source JavaScript files
 src_paths:
-    - js/common_helpers
+    - js
     - common/js
     - teams/js
 
