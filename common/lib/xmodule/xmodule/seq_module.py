@@ -131,6 +131,10 @@ class SequenceModule(SequenceFields, XModule):
                 childinfo['title'] = child.display_name_with_default
             contents.append(childinfo)
 
+            # TODO -- experimental
+            if hasattr(child, 'sequential_block_content') and child.sequential_block_content():
+                break
+
         params = {'items': contents,
                   'element_id': self.location.html_id(),
                   'item_id': self.location.to_deprecated_string(),

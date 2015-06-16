@@ -148,3 +148,10 @@ class VerticalBlock(SequenceFields, XModuleFields, StudioEditableBlock, XmlParse
         xblock_body["content_type"] = "Sequence"
 
         return xblock_body
+
+    # DEBUG -- experimental
+    def sequential_block_content(self):
+        return self.has_children and any(
+            hasattr(child, "sequential_block_content") and child.sequential_block_content()
+            for child in self.get_display_items()
+        )
