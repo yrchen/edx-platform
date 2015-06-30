@@ -27,10 +27,6 @@ from student.helpers import (
   if cert_name_long == "":
     cert_name_long = settings.CERT_NAME_LONG
   billing_email = settings.PAYMENT_SUPPORT_EMAIL
-
-  course_about_image_url = course_image_url(course)
-  if not course_about_image_url:
-    course_about_image_url = settings.STATIC_URL + settings.DEFAULT_COURSE_ABOUT_IMAGE_URL
 %>
 
 <%namespace name='static' file='../static_content.html'/>
@@ -54,16 +50,16 @@ from student.helpers import (
       % if show_courseware_link:
         % if not is_course_blocked:
             <a href="${course_target}" class="cover">
-              <img src="${course_about_image_url}" class="course-image" alt="${_('{course_number} {course_name} Home Page').format(course_number=course.number, course_name=course.display_name_with_default) |h}" />
+              <img src="${course_image_url(course)}" class="course-image" alt="${_('{course_number} {course_name} Home Page').format(course_number=course.number, course_name=course.display_name_with_default) |h}" />
             </a>
         % else:
             <a class="fade-cover">
-              <img src="${course_about_image_url}" class="course-image" alt="${_('{course_number} {course_name} Cover Image').format(course_number=course.number, course_name=course.display_name_with_default) |h}" />
+              <img src="${course_image_url(course)}" class="course-image" alt="${_('{course_number} {course_name} Cover Image').format(course_number=course.number, course_name=course.display_name_with_default) |h}" />
             </a>
         % endif
       % else:
         <a class="cover">
-          <img src="${course_about_image_url}" class="course-image" alt="${_('{course_number} {course_name} Cover Image').format(course_number=course.number, course_name=course.display_name_with_default) | h}" />
+          <img src="${course_image_url(course)}" class="course-image" alt="${_('{course_number} {course_name} Cover Image').format(course_number=course.number, course_name=course.display_name_with_default) | h}" />
         </a>
       % endif
       % if settings.FEATURES.get('ENABLE_VERIFIED_CERTIFICATES'):

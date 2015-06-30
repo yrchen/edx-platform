@@ -5,18 +5,11 @@ from django.core.urlresolvers import reverse
 from courseware.courses import course_image_url, get_course_about_section
 %>
 <%page args="course" />
-
-<%
-  course_about_image_url = course_image_url(course)
-  if not course_about_image_url:
-    course_about_image_url = settings.STATIC_URL + settings.DEFAULT_COURSE_ABOUT_IMAGE_URL
-%>
-
 <article class="course" id="${course.id | h}" role="region" aria-label="${get_course_about_section(course, 'title')}">
   <a href="${reverse('about_course', args=[course.id.to_deprecated_string()])}">
     <header class="course-image">
       <div class="cover-image">
-        <img src="${course_about_image_url}" alt="${get_course_about_section(course, 'title')} ${course.display_number_with_default}" />
+        <img src="${course_image_url(course)}" alt="${get_course_about_section(course, 'title')} ${course.display_number_with_default}" />
         <div class="learn-more" aria-hidden=true>${_("LEARN MORE")}</div>
       </div>
     </header>

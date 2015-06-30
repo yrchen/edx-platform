@@ -9,13 +9,6 @@ from edxmako.shortcuts import marketing_link
 %>
 
 <%inherit file="../main.html" />
-
-<%
-  course_about_image_url = course_image_url(course)
-  if not course_about_image_url:
-    course_about_image_url = settings.STATIC_URL + settings.DEFAULT_COURSE_ABOUT_IMAGE_URL
-
-%>
 <%block name="headextra">
 
   <%
@@ -190,14 +183,14 @@ from edxmako.shortcuts import marketing_link
       % if get_course_about_section(course, "video"):
       <a href="#video-modal" class="media" rel="leanModal">
         <div class="hero">
-          <img src="${course_about_image_url}" alt="" />
+          <img src="${course_image_url(course)}" alt="" />
           <div class="play-intro"></div>
         </div>
       </a>
       %else:
       <div class="media">
         <div class="hero">
-          <img src="${course_about_image_url}" alt="" />
+          <img src="${course_image_url(course)}" alt="" />
         </div>
       </div>
       % endif
