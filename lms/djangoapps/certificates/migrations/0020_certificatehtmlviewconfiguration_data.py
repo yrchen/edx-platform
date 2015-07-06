@@ -23,15 +23,15 @@ class Migration(DataMigration):
                 "logo_src": "/static/certificates/images/logo.png",
                 "logo_url": "http://www.example.com"
             },
-            "base": {
-                "certificate_type": "base",
+            "honor": {
+                "certificate_type": "honor",
                 "certificate_title": "Certificate of Achievement",
-                "document_body_class_append": "is-base"
+                "document_body_class_append": "is-honor"
             },
-            "distinguished": {
-                "certificate_type": "distinguished",
-                "certificate_title": "Distinguished Certificate of Achievement",
-                "document_body_class_append": "is-distinguished"
+            "verified": {
+                "certificate_type": "verified",
+                "certificate_title": "Verified Certificate of Achievement",
+                "document_body_class_append": "is-verified"
             }
         }
         orm.CertificateHtmlViewConfiguration.objects.create(
