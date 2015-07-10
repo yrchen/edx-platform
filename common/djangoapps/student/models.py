@@ -14,6 +14,7 @@ from datetime import datetime, timedelta
 import hashlib
 import json
 import logging
+from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
 from pytz import UTC
 import uuid
 from collections import defaultdict, OrderedDict
@@ -46,8 +47,6 @@ import lms.lib.comment_client as cc
 from util.model_utils import emit_field_changed_events, get_changed_fields_dict
 from util.query import use_read_replica_if_available
 from xmodule_django.models import CourseKeyField, NoneToEmptyManager
-from xmodule.modulestore.exceptions import ItemNotFoundError
-from xmodule.modulestore.django import modulestore
 from opaque_keys.edx.keys import CourseKey
 from functools import total_ordering
 
@@ -1064,13 +1063,9 @@ class CourseEnrollment(models.Model):
         """
         # All the server-side checks for whether a user is allowed to enroll.
         try:
-            course = modulestore().get_course(course_key)
-        except ItemNotFoundError:
-            log.warning(
-                u"User %s failed to enroll in non-existent course %s",
-                user.username,
-                course_key.to_deprecated_string(),
-            )
+            course = CourseOverview.get_from_id(course_key)
+        except CourseOverview.DoesNotExist:
+            log.warning(u"User %s failed to enroll in non-existent course %s", user.username, unicode(course_key))
             raise NonExistentCourseError
 
         if check_access:
@@ -1320,7 +1315,7 @@ class CourseEnrollment(models.Model):
 
     @property
     def course(self):
-        return modulestore().get_course(self.course_id)
+        return CourseOverview.get_from_id(self.course_id)
 
     @property
     def course_overview(self):

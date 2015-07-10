@@ -4,9 +4,10 @@ source to be used throughout the API.
 
 """
 import logging
+
 from django.contrib.auth.models import User
 from opaque_keys.edx.keys import CourseKey
-from xmodule.modulestore.django import modulestore
+from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
 from enrollment.errors import (
     CourseNotFoundError, CourseEnrollmentClosedError, CourseEnrollmentFullError,
     CourseEnrollmentExistsError, UserNotFoundError, InvalidEnrollmentAttribute
@@ -260,10 +261,11 @@ def get_course_enrollment_info(course_id, include_expired=False):
         CourseNotFoundError
 
     """
-    course_key = CourseKey.from_string(course_id)
-    course = modulestore().get_course(course_key)
-    if course is None:
+    try:
+        course_key = CourseKey.from_string(course_id)
+        course = CourseOverview.get_from_id(course_key)
+        return CourseField().to_native(course, include_expired=include_expired)
+    except CourseOverview.DoesNotExist:
         msg = u"Requested enrollment information for unknown course {course}".format(course=course_id)
         log.warning(msg)
         raise CourseNotFoundError(msg)
-    return CourseField().to_native(course, include_expired=include_expired)

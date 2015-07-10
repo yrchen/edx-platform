@@ -3,11 +3,13 @@ Serializers for all Course Enrollment related return objects.
 
 """
 import logging
+from django.core.exceptions import ObjectDoesNotExist
 
 from rest_framework import serializers
+
+from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
 from student.models import CourseEnrollment
 from course_modes.models import CourseMode
-
 
 log = logging.getLogger(__name__)
 
@@ -19,6 +21,7 @@ class StringListField(serializers.CharField):
     [1,2,3]
 
     """
+
     def field_to_native(self, obj, field_name):
         """
         Serialize the object's class name.
@@ -39,19 +42,18 @@ class CourseField(serializers.RelatedField):
     """
 
     def to_native(self, course, **kwargs):
-        course_id = unicode(course.id)
         course_modes = ModeSerializer(
             CourseMode.modes_for_course(course.id, kwargs.get('include_expired', False), only_selectable=False)
         ).data  # pylint: disable=no-member
 
         return {
-            "course_id": course_id,
-            "enrollment_start": course.enrollment_start,
-            "enrollment_end": course.enrollment_end,
-            "course_start": course.start,
-            "course_end": course.end,
-            "invite_only": course.invitation_only,
-            "course_modes": course_modes,
+            'course_id': unicode(course.id),
+            'enrollment_start': course.enrollment_start,
+            'enrollment_end': course.enrollment_end,
+            'course_start': course.start,
+            'course_end': course.end,
+            'invite_only': course.invitation_only,
+            'course_modes': course_modes,
         }
 
 
@@ -79,16 +81,16 @@ class CourseEnrollmentSerializer(serializers.ModelSerializer):
         return [enrollment for enrollment in serialized_data if enrollment.get('course_details')]
 
     def get_course_details(self, model):
-        if model.course is None:
+        try:
+            field = CourseField()
+            return field.to_native(model.course)
+        except ObjectDoesNotExist:
             msg = u"Course '{0}' does not exist (maybe deleted), in which User (user_id: '{1}') is enrolled.".format(
                 model.course_id,
                 model.user.id
             )
             log.warning(msg)
             return None
-
-        field = CourseField()
-        return field.to_native(model.course)
 
     def get_username(self, model):
         """Retrieves the username from the associated model."""
