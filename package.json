@@ -6,6 +6,7 @@
     "uglify-js": "2.4.15"
   },
   "devDependencies": {
-    "jshint": "^2.7.0"
+    "jshint": "^2.7.0",
+    "plato": "1.2.2"
   }
 }
