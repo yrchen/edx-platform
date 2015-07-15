@@ -11,6 +11,7 @@
                     topicCollection: topicCollection
                 });
                 view.render();
+                console.log("This is a new version!");
             };
         });
 }).call(this, define || RequireJS.define);
