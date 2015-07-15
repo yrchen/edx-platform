@@ -155,6 +155,7 @@
                 }
             }
             showLearnerProfileView();
+            console.log("Updated version of learner profiles!");
 
             return {
                 accountSettingsModel: accountSettingsModel,
