@@ -13,6 +13,7 @@ from .api import set_credit_requirements
 from openedx.core.djangoapps.credit.exceptions import InvalidCreditRequirements
 from openedx.core.djangoapps.credit.models import CreditCourse
 from xmodule.modulestore.django import modulestore
+from xmodule.modulestore import ModuleStoreEnum
 from xmodule.modulestore.exceptions import ItemNotFoundError
 
 LOGGER = get_task_logger(__name__)
@@ -125,14 +126,41 @@ def _get_credit_course_requirement_xblocks(course_key):  # pylint: disable=inval
                 "display_name": block.get_credit_requirement_display_name(),
                 "criteria": {},
             }
-            for block in modulestore().get_items(
-                course_key,
-                qualifiers={"category": desc["category"]}
-            )
+            for block in _get_xblocks(course_key, desc["category"])
             if _is_credit_requirement(block)
         ])
 
     return requirements
+
+
+def _is_in_course_tree(block):
+    """
+    Check that the XBlock is in the course tree.
+
+    It's possible that the XBlock is not in the course tree
+    if its parent has been deleted and is now an orphan.
+    """
+    ancestor = block.get_parent()
+    while ancestor is not None and ancestor.location.category != "course":
+        ancestor = ancestor.get_parent()
+
+    return ancestor is not None
+
+
+def _get_xblocks(course_key, category):
+    """
+    Retrieve all XBlocks in the course for a particular category.
+
+    Returns only XBlocks that are published and haven't been deleted.
+    """
+    return [
+        block for block in modulestore().get_items(
+            course_key,
+            qualifiers={"category": category},
+            revision=ModuleStoreEnum.RevisionOption.published_only,
+        )
+        if _is_in_course_tree(block)
+    ]
 
 
 def _is_credit_requirement(xblock):
