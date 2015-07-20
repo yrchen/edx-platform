@@ -329,7 +329,7 @@ def get_credit_requirement_status(course_key, username, namespace=None, name=Non
             "name": requirement.name,
             "display_name": requirement.display_name,
             "criteria": requirement.criteria,
-            "reason": requirement_status.reason,
+            "reason": requirement_status.reason if requirement_status else None,
             "status": requirement_status.status if requirement_status else None,
             "status_date": requirement_status.modified if requirement_status else None,
         })
