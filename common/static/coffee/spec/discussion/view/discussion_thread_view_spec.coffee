@@ -61,7 +61,17 @@ describe "DiscussionThreadView", ->
               (model, updates, safeAjaxParams, errorMsg) ->
                 model.set(updates)
             )
+
             view
+
+        checkForTopicFocus = () ->
+            view = createDiscussionThreadView()
+            waitsFor (->
+                $(view.$(".discussion-article"))
+            ), "conversation did not receive focus", 5000
+
+        it "sends focus to the conversation when opened", ->
+            checkForTopicFocus()
 
         checkCommentForm = (originallyClosed, mode) ->
             view = createDiscussionThreadView(originallyClosed, mode)
