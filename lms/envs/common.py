@@ -1818,6 +1818,9 @@ INSTALLED_APPS = (
     'bulk_email',
     'branding',
 
+    # Student support tools
+    'support',
+
     # External auth (OpenID, shib)
     'external_auth',
     'django_openid_auth',

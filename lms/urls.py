@@ -147,7 +147,7 @@ if settings.FEATURES["ENABLE_SYSADMIN_DASHBOARD"]:
     )
 
 urlpatterns += (
-    url(r'^support/', include('dashboard.support_urls')),
+    url(r'^support/', include('support.urls', app_name="support", namespace='support')),
 )
 
 #Semi-static views (these need to be rendered and have the login bar, but don't change)
