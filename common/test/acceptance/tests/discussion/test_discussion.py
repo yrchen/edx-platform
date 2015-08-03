@@ -270,6 +270,9 @@ class DiscussionTabSingleThreadURLTest(DiscussionTabSingleThreadTest):
         AutoAuthPage(self.browser, course_id=course_id).visit()
 
     def test_show_thread(self):
+        """
+        Check that discussion page displays single thread even with encoded colon in the URL
+        """
         thread_id = "test_thread_{}".format(uuid4().hex)
 
         thread_fixture = SingleThreadViewFixture(
