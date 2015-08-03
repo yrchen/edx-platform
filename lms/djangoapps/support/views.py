@@ -1,11 +1,9 @@
 """
 TODO -- views for student support
 """
-from django.views.generic.base import TemplateView
+from edxmako.shortcuts import render_to_response
 
 
-class SupportIndex(TemplateView):
-    """
-    TODO
-    """
-    template_name = 'support/index.html'
+def index(request):
+    """TODO """
+    return render_to_response("support/index.html")

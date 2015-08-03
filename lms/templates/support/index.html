@@ -1,10 +1,19 @@
-{% extends "main_django.html" %}
-{% load i18n %}
-{% block title %}<title>Support Dashboard</title>{% endblock %}
+<%! from django.utils.translation import ugettext as _ %>
+<%namespace name='static' file='../static_content.html'/>
 
-{% block body %}
+<%inherit file="../main.html" />
 
-<ul>
-<li><a href="/support/refund/">{% trans "Manual Refund" %}</a></li>
-</ul>
-{% endblock %}
+<%block name="pagetitle">
+${_("Student Support")}
+</%block>
+
+<%block name="content">
+<section class="container">
+  <h1>${_("Student Support")}</h1>
+  <p>${_("Welcome to student support!  TODO")}</p>
+  <ul>
+    <li><a href="#">${_("Certificates")}</a>: ${_("TODO: use this to regenerate certificates for a student")}</li>
+    <li><a href="#">${_("Manual Refund")}</a>: TODO msg and this will be deprecated!</li>
+  </ul>
+</section>
+</%block>
