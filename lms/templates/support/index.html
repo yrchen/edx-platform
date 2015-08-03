@@ -1,4 +1,7 @@
-<%! from django.utils.translation import ugettext as _ %>
+<%!
+from django.core.urlresolvers import reverse
+from django.utils.translation import ugettext as _
+%>
 <%namespace name='static' file='../static_content.html'/>
 
 <%inherit file="../main.html" />
@@ -12,7 +15,7 @@ ${_("Student Support")}
   <h1>${_("Student Support")}</h1>
   <p>${_("Welcome to student support!  TODO")}</p>
   <ul>
-    <li><a href="#">${_("Certificates")}</a>: ${_("TODO: use this to regenerate certificates for a student")}</li>
+    <li><a href="${reverse("support:certificates")}">${_("Certificates")}</a>: ${_("TODO: use this to regenerate certificates for a student")}</li>
     <li><a href="#">${_("Manual Refund")}</a>: TODO msg and this will be deprecated!</li>
   </ul>
 </section>

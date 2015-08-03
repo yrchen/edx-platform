@@ -3,7 +3,9 @@ TODO -- views for student support
 """
 from functools import wraps
 
-from django.http import HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseForbidden
+from django.views.generic import View
+from django.utils.decorators import method_decorator
 
 from edxmako.shortcuts import render_to_response
 from courseware.access import has_access
@@ -25,3 +27,15 @@ def require_support_permission(func):
 def index(request, *args, **kwargs):
     """TODO """
     return render_to_response("support/index.html")
+
+
+class CertificatesSupportView(View):
+    """TODO"""
+
+    @method_decorator(require_support_permission)
+    def get(self, request):
+        return HttpResponse("GET CERTIFICATES!")
+
+    @method_decorator(require_support_permission)
+    def post(self, request):
+        return HttpResponse("POST CERTIFICATES!")
