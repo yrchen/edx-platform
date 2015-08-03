@@ -310,6 +310,15 @@ class CourseCreatorRole(RoleBase):
         super(CourseCreatorRole, self).__init__(self.ROLE, *args, **kwargs)
 
 
+@register_access_role
+class SupportStaffRole(RoleBase):
+    """TODO """
+    ROLE = "support"
+
+    def __init__(self, *args, **kwargs):
+        super(SupportStaffRole, self).__init__(self.ROLE, *args, **kwargs)
+
+
 class UserBasedRole(object):
     """
     Backward mapping: given a user, manipulate the courses and roles
