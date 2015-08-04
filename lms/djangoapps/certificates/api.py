@@ -29,6 +29,26 @@ from certificates.queue import XQueueCertInterface
 log = logging.getLogger("edx.certificate")
 
 
+def get_certificates_for_user(username):
+    """TODO """
+    return [
+        {
+            "course_key": cert.course_id,
+            "type": cert.mode,
+            "status": cert.status,
+            "download_url": (
+                cert.download_url
+                if cert.status == CertificateStatuses.downloadable
+                else None
+            ),
+            "grade": cert.grade,
+            "created": cert.created_date,
+            "modified": cert.modified_date,
+        }
+        for cert in GeneratedCertificate.objects.filter(user__username=username)
+    ]
+
+
 def generate_user_certificates(student, course_key, course=None, insecure=False, generation_mode='batch',
                                forced_grade=None):
     """

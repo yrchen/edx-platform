@@ -6,6 +6,12 @@ from django.utils.translation import ugettext as _
 
 <%inherit file="../main.html" />
 
+<%block name="js_extra">
+<%static:require_module module_name="js/support/certificates_factory" class_name="CertificatesFactory">
+    new CertificatesFactory({});
+</%static:require_module>
+</%block>
+
 <%block name="pagetitle">
 ${_("Student Support")}
 </%block>
