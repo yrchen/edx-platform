@@ -1,0 +1,22 @@
+<%!
+from django.core.urlresolvers import reverse
+from django.utils.translation import ugettext as _
+%>
+<%namespace name='static' file='../static_content.html'/>
+
+<%inherit file="../main.html" />
+
+<%block name="pagetitle">
+${_("Student Support")}
+</%block>
+
+<%block name="content">
+<section class="container">
+  <h1>${_("Student Support: Certificates")}</h1>
+  <p>${_("Welcome to the certificates UI!  TODO")}</p>
+
+  # Step #1: Retrieve user's certificates (username)
+  # Step #2: Issue the command to regenerate the certificates
+
+</section>
+</%block>

@@ -16,11 +16,6 @@ if settings.DEBUG or settings.FEATURES.get('ENABLE_DJANGO_ADMIN_SITE'):
 urlpatterns = (
     '',
 
-    # certificate view
-    url(r'^update_certificate$', 'certificates.views.update_certificate'),
-    url(r'^update_example_certificate$', 'certificates.views.update_example_certificate'),
-    url(r'^request_certificate$', 'certificates.views.request_certificate'),
-
     url(r'^$', 'branding.views.index', name="root"),   # Main marketing page, or redirect to courseware
     url(r'^dashboard$', 'student.views.dashboard', name="dashboard"),
     url(r'^login_ajax$', 'student.views.login_user', name="login"),
@@ -661,22 +656,15 @@ if settings.FEATURES.get('ENABLE_OAUTH2_PROVIDER'):
         ),
     )
 
-# Certificates Web/HTML View
+# Certificates
 urlpatterns += (
-    url(r'^certificates/user/(?P<user_id>[^/]*)/course/{course_id}'.format(course_id=settings.COURSE_ID_PATTERN),
-        'certificates.views.render_html_view', name='cert_html_view'),
-)
+    url(r'^certificates/', include('lms.djangoapps.certificates.urls', app_name="certificates", namespace="certificates")),
 
-BADGE_SHARE_TRACKER_URL = url(
-    r'^certificates/badge_share_tracker/{}/(?P<network>[^/]+)/(?P<student_username>[^/]+)/$'.format(
-        settings.COURSE_ID_PATTERN
-    ),
-    'certificates.views.track_share_redirect',
-    name='badge_share_tracker'
+    # Backwards compatibility with XQueue, which uses URLs that are not prefixed with /certificates/
+    url(r'^update_certificate$', 'certificates.views.update_certificate'),
+    url(r'^update_example_certificate$', 'certificates.views.update_example_certificate'),
+    url(r'^request_certificate$', 'certificates.views.request_certificate'),
 )
-
-if settings.FEATURES.get('ENABLE_OPENBADGES', False):
-    urlpatterns += (BADGE_SHARE_TRACKER_URL,)
 
 # XDomain proxy
 urlpatterns += (

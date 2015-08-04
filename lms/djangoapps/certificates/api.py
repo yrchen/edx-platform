@@ -282,7 +282,11 @@ def get_certificate_url(user_id, course_id):
     url = ""
     if settings.FEATURES.get('CERTIFICATES_HTML_VIEW', False):
         url = reverse(
-            'cert_html_view', kwargs=dict(user_id=str(user_id), course_id=unicode(course_id))
+            'certificates:html_view',
+            kwargs={
+                "user_id": str(user_id),
+                "course_id": unicode(course_id),
+            }
         )
     else:
         try:
