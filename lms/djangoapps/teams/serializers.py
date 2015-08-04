@@ -1,4 +1,5 @@
 """Defines serializers used by the Team API."""
+import logging
 
 from django.contrib.auth.models import User
 from django.db.models import Count
@@ -10,6 +11,10 @@ from openedx.core.lib.api.fields import ExpandableField
 from openedx.core.djangoapps.user_api.serializers import UserSerializer
 
 from .models import CourseTeam, CourseTeamMembership
+from django_countries.fields import Country
+from django.conf import settings
+
+
 
 
 class UserMembershipSerializer(serializers.ModelSerializer):
@@ -38,6 +43,8 @@ class CourseTeamSerializer(serializers.ModelSerializer):
     """Serializes a CourseTeam with membership information."""
     id = serializers.CharField(source='team_id', read_only=True)  # pylint: disable=invalid-name
     membership = UserMembershipSerializer(many=True, read_only=True)
+    country = serializers.SerializerMethodField(method_name="get_country")
+    language = serializers.SerializerMethodField(method_name="get_language")
 
     class Meta(object):
         """Defines meta information for the ModelSerializer."""
@@ -56,6 +63,17 @@ class CourseTeamSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ("course_id", "date_created")
 
+    def get_country(self, obj):
+        """Serializes country field as name from ISO code"""
+        c = Country(obj.country)
+        return c.name
+
+    def get_language(self, obj):
+        """Serializes language field as name from ISO code"""
+        for language in settings.ALL_LANGUAGES:
+            if obj.language == language[0]:
+                return language[1]
+        return ''
 
 class CourseTeamCreationSerializer(serializers.ModelSerializer):
     """Deserializes a CourseTeam for creation."""

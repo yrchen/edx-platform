@@ -47,11 +47,16 @@
         TeamCountryLanguageView = Backbone.View.extend({
             template: _.template(teamCountryLanguageTemplate),
 
+            initialize: function (options) {
+                this.languages = options.languages;
+                this.countries = options.countries;
+            },
+
             render: function() {
                 // this.$el should be the card meta div
                 this.$el.append(this.template({
-                    country: this.model.get('country'),
-                    language: this.model.get('language')
+                    country: function () { return this.model.get('country'); },
+                    language: function () { return this.model.get('language'); }
                 }));
             }
         });
