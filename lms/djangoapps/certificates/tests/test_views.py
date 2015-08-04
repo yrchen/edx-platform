@@ -700,7 +700,7 @@ class TrackShareRedirectTest(UrlResetMixin, ModuleStoreTestCase, EventTrackingTe
 
     @patch.dict(settings.FEATURES, {"ENABLE_OPENBADGES": True})
     def setUp(self):
-        super(TrackShareRedirectTest, self).setUp('certificates')
+        super(TrackShareRedirectTest, self).setUp('certificates.urls')
         self.client = Client()
         self.course = CourseFactory.create(
             org='testorg', number='run1', display_name='trackable course'
