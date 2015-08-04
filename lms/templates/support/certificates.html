@@ -1,3 +1,4 @@
+## mako
 <%!
 from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext as _
@@ -7,7 +8,7 @@ from django.utils.translation import ugettext as _
 <%inherit file="../main.html" />
 
 <%block name="js_extra">
-<%static:require_module module_name="js/support/certificates_factory" class_name="CertificatesFactory">
+<%static:require_module module_name="support/js/certificates_factory" class_name="CertificatesFactory">
     new CertificatesFactory({});
 </%static:require_module>
 </%block>
