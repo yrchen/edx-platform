@@ -19,7 +19,13 @@
         <td><%- cert.get("course_key") %></td>
         <td><%- cert.get("type") %></td>
         <td><%- cert.get("status") %></td>
-        <td><a href="<%- cert.get("download_url") %>">Download</a></td>
+        <td>
+            <% if (cert.get("status") === "downloadable") { %>
+            <a href="<%- cert.get("download_url") %>">Download</a>
+            <% } else { %>
+            Not Available
+            <% } %>
+        </td>
         <td><%- cert.get("grade") %></td>
         <td><%- cert.get("created") %></td>
         <td><%- cert.get("modified") %></td>
