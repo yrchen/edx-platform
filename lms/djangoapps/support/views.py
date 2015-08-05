@@ -6,6 +6,7 @@ from functools import wraps
 from django.http import HttpResponse, HttpResponseForbidden
 from django.views.generic import View
 from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import login_required
 
 from edxmako.shortcuts import render_to_response
 from courseware.access import has_access
@@ -20,7 +21,7 @@ def require_support_permission(func):
         else:
             return HttpResponseForbidden()
 
-    return inner
+    return login_required(inner)
 
 
 @require_support_permission
