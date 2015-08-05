@@ -27,13 +27,6 @@ from certificates.models import (
 logger = logging.getLogger(__name__)
 
 
-class CourseDoesNotExist(Exception):
-    """
-    This exception is raised in the case where None is returned from the modulestore
-    """
-    pass
-
-
 @csrf_exempt
 def request_certificate(request):
     """Request the on-demand creation of a certificate for some user, course.

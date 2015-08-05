@@ -34,6 +34,13 @@ from certificates.models import (
 logger = logging.getLogger(__name__)
 
 
+class CourseDoesNotExist(Exception):
+    """
+    This exception is raised in the case where None is returned from the modulestore
+    """
+    pass
+
+
 def get_certificate_description(mode, certificate_type, platform_name):
     """
     :return certificate_type_description on the basis of current mode

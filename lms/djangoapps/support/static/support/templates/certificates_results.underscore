@@ -20,7 +20,7 @@
         <td><%- cert.get("type") %></td>
         <td><%- cert.get("status") %></td>
         <td>
-            <% if (cert.get("status") === "downloadable") { %>
+            <% if (cert.get("download_url")) { %>
             <a href="<%- cert.get("download_url") %>">Download</a>
             <% } else { %>
             Not Available

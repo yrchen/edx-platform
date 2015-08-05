@@ -116,7 +116,14 @@ def regenerate_user_certificates(student, course_key, course=None,
         xqueue.use_https = False
 
     generate_pdf = not has_html_certificates_enabled(course_key, course)
-    return xqueue.regen_cert(student, course_key, course, forced_grade, template_file, generate_pdf)
+    return xqueue.regen_cert(
+        student,
+        course_key,
+        course=course,
+        forced_grade=forced_grade,
+        template_file=template_file,
+        generate_pdf=generate_pdf
+    )
 
 
 def certificate_downloadable_status(student, course_key):
