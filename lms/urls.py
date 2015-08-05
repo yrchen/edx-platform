@@ -145,7 +145,7 @@ urlpatterns += (
     url(r'^support/', include('support.urls', app_name="support", namespace='support')),
 )
 
-#Semi-static views (these need to be rendered and have the login bar, but don't change)
+# Semi-static views (these need to be rendered and have the login bar, but don't change)
 urlpatterns += (
     url(r'^404$', 'static_template_view.views.render',
         {'template': '404.html'}, name="404"),

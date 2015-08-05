@@ -5,15 +5,17 @@ import logging
 
 from django.contrib.auth.models import User
 from django.views.generic.edit import FormView
-from django.views.generic.base import TemplateView
 from django.utils.translation import ugettext as _
 from django.http import HttpResponseRedirect
 from django.contrib import messages
 from django import forms
+from django.utils.decorators import method_decorator
+
 from student.models import CourseEnrollment
 from opaque_keys.edx.keys import CourseKey
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.locations import SlashSeparatedCourseKey
+from support.decorators import require_support_permission
 
 log = logging.getLogger(__name__)
 
@@ -82,20 +84,17 @@ class RefundForm(forms.Form):
         return is_valid
 
 
-class SupportDash(TemplateView):
-    """
-    Support dashboard view
-    """
-    template_name = 'dashboard/support.html'
-
-
-class Refund(FormView):
+class RefundSupportView(FormView):
     """
     Refund form view
     """
     template_name = 'dashboard/_dashboard_refund.html'
     form_class = RefundForm
     success_url = '/support/'
+
+    @method_decorator(require_support_permission)
+    def dispatch(self, *args, **kwargs):
+        return super(RefundSupportView, self).dispatch(*args, **kwargs)
 
     def get_context_data(self, **kwargs):
         """
