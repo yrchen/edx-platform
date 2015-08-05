@@ -46,7 +46,7 @@ def get_certificates_for_user(username):
             "created": cert.created_date,
             "modified": cert.modified_date,
         }
-        for cert in GeneratedCertificate.objects.filter(user__username=username)
+        for cert in GeneratedCertificate.objects.filter(user__username=username).order_by("course_id")
     ]
 
 
