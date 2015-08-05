@@ -34,6 +34,9 @@ def require_certificate_permission(func):
 def get_user_certificates(request, username=None):
     """TODO """
     certificates = api.get_certificates_for_user(username)
+    for cert in certificates:
+        cert["course_key"] = unicode(cert["course_key"])
+
     return JsonResponse(certificates)
 
 

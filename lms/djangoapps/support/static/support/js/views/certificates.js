@@ -11,11 +11,12 @@
     ], function (Backbone, _, gettext, CertCollection, certificatesTpl, resultsTpl) {
         var view = Backbone.View.extend({
             events: {
-                "submit .certificates-form": "search"
+                "submit .certificates-form": "search",
+                "click .btn-cert-regenerate": "regenerateCertificate"
             },
 
             initialize: function() {
-                _.bindAll(this, "search", "updateCertificates", "handleError");
+                _.bindAll(this, "search", "updateCertificates", "regenerateCertificate", "handleError");
                 this.certificates = new CertCollection({});
             },
 
@@ -24,8 +25,15 @@
             },
 
             renderResults: function() {
-                var $resultsDiv = $(".certificates-results", this.$el);
-                $resultsDiv.html(_.template(resultsTpl, {certificates: this.certificates}));
+                var context = {
+                    certificates: this.certificates,
+                };
+
+                this.setResults(_.template(resultsTpl, context));
+            },
+
+            renderError: function() {
+                this.setResults(gettext("An unexpected error occurred.  Please try again."));
             },
 
             search: function(event) {
@@ -44,13 +52,34 @@
                 this.renderResults();
             },
 
+            regenerateCertificate: function(event) {
+                var $button = $(event.target);
+
+                $.ajax({
+                    url: "/certificates/regenerate",
+                    type: "POST",
+                    data: {
+                        username: $button.data("username"),
+                        course_key: $button.data("course-key"),
+                    },
+                    context: this,
+                    success: this.updateCertificates,
+                    error: this.handleError
+                });
+            },
+
             handleError: function() {
-                alert("Error!");
+                this.renderError();
             },
 
             getUsernameForSearch: function() {
                 return $('.certificates-form input[name="username"]').val();
             },
+
+            setResults: function(html) {
+                var $resultsDiv = $(".certificates-results", this.$el);
+                $resultsDiv.html(html);
+            }
         });
 
         return view;
