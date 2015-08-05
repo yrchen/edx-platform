@@ -1,0 +1,26 @@
+<% if (certificates.length === 0) { %>
+<p>No results</p>
+<% } else { %>
+<table>
+    <tr>
+        <th>Course Key</th>
+        <th>Type</th>
+        <th>Status</th>
+        <th>Download URL</th>
+        <th>Grade</th>
+        <th>Created</th>
+        <th>Modified</th>
+        <th>Regenerate</th>
+    </tr>
+    <tr>
+        <td>Foo</td>
+        <td>Foo</td>
+        <td>Foo</td>
+        <td>Foo</td>
+        <td>Foo</td>
+        <td>Foo</td>
+        <td>Foo</td>
+        <td>Foo</td>
+    </tr>
+</table>
+<% } %>

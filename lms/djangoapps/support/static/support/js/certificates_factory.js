@@ -1,12 +1,10 @@
 ;(function (define) {
     'use strict';
 
-    define(['jquery', 'support/js/views/certificates'],
-        function ($, CertificatesView) {
+    define(['jquery', 'underscore', 'support/js/views/certificates'],
+        function ($, _, CertificatesView) {
             return function (options) {
-                var view = new CertificatesView({
-                    el: $('.certificates-content')
-                });
+                var view = new CertificatesView(_.extend(options, {el: $('.certificates-content')}));
                 view.render();
             };
         });
