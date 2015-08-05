@@ -1,5 +1,7 @@
 """
 Views for support dashboard
+
+TODO update this docstring
 """
 import logging
 
@@ -88,7 +90,7 @@ class RefundSupportView(FormView):
     """
     Refund form view
     """
-    template_name = 'dashboard/_dashboard_refund.html'
+    template_name = 'support/refund.html'
     form_class = RefundForm
     success_url = '/support/'
 
