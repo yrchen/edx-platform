@@ -3,6 +3,7 @@
     define(['backbone'], function (Backbone) {
         var Certificate = Backbone.Model.extend({
             defaults: {
+                username: null,
                 course_key: null,
                 type: null,
                 status: null,

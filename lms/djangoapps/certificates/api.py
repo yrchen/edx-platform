@@ -33,6 +33,7 @@ def get_certificates_for_user(username):
     """TODO """
     return [
         {
+            "username": username,
             "course_key": cert.course_id,
             "type": cert.mode,
             "status": cert.status,

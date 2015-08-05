@@ -6,15 +6,15 @@
                 model: CertModel,
 
                 initialize: function(options) {
-                    this.username = options.username || "";
+                    this.userQuery = options.userQuery || "";
                 },
 
-                setUsername: function(username) {
-                    this.username = username;
+                setUserQuery: function(userQuery) {
+                    this.userQuery = userQuery;
                 },
 
                 url: function() {
-                    return "/certificates/user/" + this.username;
+                    return "/certificates/search?query=" + this.userQuery;
                 }
             });
             return CertCollection;

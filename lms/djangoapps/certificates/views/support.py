@@ -8,6 +8,7 @@ from functools import wraps
 
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.views.decorators.http import require_GET, require_POST
+from django.db.models import Q
 
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey
@@ -32,9 +33,18 @@ def require_certificate_permission(func):
 
 @require_GET
 @require_certificate_permission
-def get_user_certificates(request, username=None):
+def search_by_user(request):
     """TODO """
-    certificates = api.get_certificates_for_user(username)
+    query = request.GET.get("query")
+    if not query:
+        return JsonResponse({})
+
+    try:
+        user = User.objects.get(Q(email=query) | Q(username=query))
+    except User.DoesNotExist:
+        return JsonResponse([])
+
+    certificates = api.get_certificates_for_user(user.username)
     for cert in certificates:
         cert["course_key"] = unicode(cert["course_key"])
 

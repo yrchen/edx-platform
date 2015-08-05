@@ -41,7 +41,7 @@
                 event.preventDefault();
 
                 // Fetch the certificate collection for the given user
-                this.certificates.setUsername(this.getUsernameForSearch());
+                this.certificates.setUserQuery(this.getUserQuery());
                 this.certificates.fetch({
                     success: this.updateCertificates,
                     error: this.handleError
@@ -77,8 +77,8 @@
                 this.renderError();
             },
 
-            getUsernameForSearch: function() {
-                return $('.certificates-form input[name="username"]').val();
+            getUserQuery: function() {
+                return $('.certificates-form input[name="query"]').val();
             },
 
             setResults: function(html) {

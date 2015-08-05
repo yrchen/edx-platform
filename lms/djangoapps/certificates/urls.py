@@ -20,11 +20,7 @@ urlpatterns = patterns(
     # End-points used by student support
     # The views in the lms/djangoapps/support use these end-points
     # to retrieve certificate information and regenerate certificates.
-    url(
-        r'user/(?P<username>[^/]*)',
-        views.get_user_certificates,
-        name="certificates_for_user"
-    ),
+    url(r'search', views.search_by_user, name="search"),
     url(r'regenerate', views.regenerate_certificate_for_user, name="regenerate_certificate_for_user"),
 )
 
