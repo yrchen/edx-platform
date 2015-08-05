@@ -15,13 +15,20 @@
                 "click .btn-cert-regenerate": "regenerateCertificate"
             },
 
-            initialize: function() {
+            initialize: function(options) {
                 _.bindAll(this, "search", "updateCertificates", "regenerateCertificate", "handleError");
                 this.certificates = new CertCollection({});
+                this.initialQuery = options.userQuery || null;
             },
 
             render: function() {
                 this.$el.html(_.template(certificatesTpl));
+
+                // TODO
+                if (this.initialQuery) {
+                    this.setUserQuery(this.initialQuery);
+                    this.triggerSearch();
+                }
             },
 
             renderResults: function() {
@@ -37,11 +44,19 @@
             },
 
             search: function(event) {
+
+                // Fetch the certificate collection for the given user
+                var query = this.getUserQuery(),
+                    url = "/support/certificates?query=" + query;
+
                 // Prevent form submission, since we're handling it ourselves.
                 event.preventDefault();
 
-                // Fetch the certificate collection for the given user
-                this.certificates.setUserQuery(this.getUserQuery());
+                // TODO -- explain
+                window.history.pushState({}, window.document.title, url);
+
+                // TODO
+                this.certificates.setUserQuery(query);
                 this.certificates.fetch({
                     success: this.updateCertificates,
                     error: this.handleError
@@ -77,8 +92,16 @@
                 this.renderError();
             },
 
+            triggerSearch: function() {
+                $('.certificates-form').submit();
+            },
+
             getUserQuery: function() {
                 return $('.certificates-form input[name="query"]').val();
+            },
+
+            setUserQuery: function(query) {
+                $('.certificates-form input[name="query"]').val(query);
             },
 
             setResults: function(html) {

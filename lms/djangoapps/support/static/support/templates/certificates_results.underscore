@@ -6,11 +6,9 @@
         <th>Course Key</th>
         <th>Type</th>
         <th>Status</th>
-        <th>Download URL</th>
         <th>Grade</th>
-        <th>Created</th>
-        <th>Modified</th>
-        <th>Regenerate</th>
+        <th>Last Updated</th>
+        <th></th>
     </tr>
     <% for (var i = 0; i < certificates.length; i++) {
         var cert = certificates.at(i);
@@ -19,15 +17,7 @@
         <td><%- cert.get("course_key") %></td>
         <td><%- cert.get("type") %></td>
         <td><%- cert.get("status") %></td>
-        <td>
-            <% if (cert.get("download_url")) { %>
-            <a href="<%- cert.get("download_url") %>">Download</a>
-            <% } else { %>
-            Not Available
-            <% } %>
-        </td>
         <td><%- cert.get("grade") %></td>
-        <td><%- cert.get("created") %></td>
         <td><%- cert.get("modified") %></td>
         <td>
             <button

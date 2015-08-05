@@ -35,7 +35,10 @@ class CertificatesSupportView(View):
 
     @method_decorator(require_support_permission)
     def get(self, request):
-        return render_to_response("support/certificates.html")
+        context = {
+            "user_query": request.GET.get("query")
+        }
+        return render_to_response("support/certificates.html", context)
 
     @method_decorator(require_support_permission)
     def post(self, request):
