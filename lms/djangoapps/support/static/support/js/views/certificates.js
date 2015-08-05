@@ -63,7 +63,12 @@
                         course_key: $button.data("course-key"),
                     },
                     context: this,
-                    success: this.updateCertificates,
+                    success: function() {
+                        this.certificates.fetch({
+                            success: this.updateCertificates,
+                            error: this.handleError,
+                        });
+                    },
                     error: this.handleError
                 });
             },

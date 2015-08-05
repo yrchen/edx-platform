@@ -24,15 +24,11 @@
         <td><%- cert.get("created") %></td>
         <td><%- cert.get("modified") %></td>
         <td>
-            <% if (cert.get("status") === "downloadable") { %>
-                <button
-                    class="btn-cert-regenerate"
-                    data-username="<%- certificates.username %>"
-                    data-course-key="<%- cert.get("course_key") %>"
-                >Regenerate</button>
-            <% } else { %>
-                N/A
-            <% } %>
+            <button
+                class="btn-cert-regenerate"
+                data-username="<%- certificates.username %>"
+                data-course-key="<%- cert.get("course_key") %>"
+            >Regenerate</button>
         </td>
     </tr>
     <% } %>

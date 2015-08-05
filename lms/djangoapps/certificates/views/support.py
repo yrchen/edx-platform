@@ -11,7 +11,8 @@ from django.views.decorators.http import require_GET, require_POST
 
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey
-from student.models import User
+from xmodule.modulestore.django import modulestore
+from student.models import User, CourseEnrollment
 from courseware.access import has_access
 from util.json_request import JsonResponse
 from certificates import api
@@ -66,11 +67,14 @@ def regenerate_certificate_for_user(request):
     if response is not None:
         return response
 
-    status = api.regenerate_user_certificates(params["user"], params["course_key"])
+    # TODO: really shouldn't need to do this...
+    course = modulestore().get_course(params["course_key"])
+    if course is None:
+        return HttpResponseBadRequest("The course does not exist")
 
-    # DEBUG
-    print status
+    if not CourseEnrollment.is_enrolled(params["user"], params["course_key"]):
+        return HttpResponseBadRequest("The user is not enrolled in the course")
 
-    # TODO -- error code if the cert couldn't be regenerated
+    status = api.regenerate_user_certificates(params["user"], params["course_key"], course=course)
 
     return HttpResponse(200)
