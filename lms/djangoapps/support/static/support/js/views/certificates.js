@@ -3,8 +3,9 @@
 
     define(['backbone',
             'underscore',
-            'gettext'],
-           function (Backbone, _, gettext) {
+            'gettext',
+            'text!support/templates/certificates.underscore'],
+           function (Backbone, _, gettext, certificatesTemplate) {
                var view = Backbone.View.extend({
                    initialize: function() {
                       // TODO
@@ -12,6 +13,7 @@
 
                    render: function() {
                       // TODO
+                      this.$el.html(_.template(certificatesTemplate));
                    },
                });
 
