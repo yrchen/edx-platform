@@ -69,8 +69,21 @@ class SupportViewIndexTests(SupportViewTestCase):
     Tests for the support index view.
     """
 
+    EXPECTED_URL_NAMES = [
+        "support:certificates",
+        "support:refund",
+    ]
+
+    def setUp(self):
+        super(SupportViewIndexTests, self).setUp()
+        SupportStaffRole().add_users(self.user)
+
     def test_index(self):
-        self.fail("TODO")
+        response = self.client.get(reverse("support:index"))
+        self.assertContains(response, "Support")
+
+        for url_name in self.EXPECTED_URL_NAMES:
+            self.assertContains(response, reverse(url_name))
 
 
 class SupportViewCertificatesTests(SupportViewTestCase):
