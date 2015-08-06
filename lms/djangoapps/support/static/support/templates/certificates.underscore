@@ -1,6 +1,6 @@
 <form class="certificates-form">
     <input type="text" name="query" value="" placeholder="<%- gettext("username or email") %>"></input>
-    <input type="submit" value="<%- gettext("Search") %>"></input>
+    <input type="submit" value="<%- gettext("Search") %>" class="btn-disable-on-submit"></input>
 </form>
 
 <div class="certificates-results">

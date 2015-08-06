@@ -16,7 +16,7 @@
             },
 
             initialize: function(options) {
-                _.bindAll(this, "search", "updateCertificates", "regenerateCertificate", "handleError");
+                _.bindAll(this, "search", "updateCertificates", "regenerateCertificate", "handleSearchError");
                 this.certificates = new CertCollection({});
                 this.initialQuery = options.userQuery || null;
             },
@@ -39,8 +39,9 @@
                 this.setResults(_.template(resultsTpl, context));
             },
 
-            renderError: function() {
-                this.setResults(gettext("An unexpected error occurred.  Please try again."));
+            renderError: function(error) {
+                var errorMsg = error || gettext("An unexpected error occurred.  Please try again.");
+                this.setResults(errorMsg);
             },
 
             search: function(event) {
@@ -56,20 +57,18 @@
                 window.history.pushState({}, window.document.title, url);
 
                 // TODO
+                this.disableButtons();
                 this.certificates.setUserQuery(query);
                 this.certificates.fetch({
                     success: this.updateCertificates,
-                    error: this.handleError
+                    error: this.handleSearchError
                 });
-            },
-
-            updateCertificates: function() {
-                this.renderResults();
             },
 
             regenerateCertificate: function(event) {
                 var $button = $(event.target);
 
+                this.disableButtons();
                 $.ajax({
                     url: "/certificates/regenerate",
                     type: "POST",
@@ -81,15 +80,26 @@
                     success: function() {
                         this.certificates.fetch({
                             success: this.updateCertificates,
-                            error: this.handleError,
+                            error: this.handleSearchError,
                         });
                     },
-                    error: this.handleError
+                    error: this.handleRegenerateError
                 });
             },
 
-            handleError: function() {
-                this.renderError();
+            updateCertificates: function() {
+                this.renderResults();
+                this.enableButtons();
+            },
+
+            handleSearchError: function(jqxhr) {
+                this.renderError(jqxhr.responseText);
+                this.enableButtons();
+            },
+
+            handleRegenerateError: function(jqxhr) {
+                alert(jqxhr.responseText);
+                this.enableButtons();
             },
 
             triggerSearch: function() {
@@ -107,6 +117,18 @@
             setResults: function(html) {
                 var $resultsDiv = $(".certificates-results", this.$el);
                 $resultsDiv.html(html);
+            },
+
+            disableButtons: function() {
+                $('.btn-disable-on-submit')
+                    .addClass("is-disabled")
+                    .attr("disabled", true);
+            },
+
+            enableButtons: function() {
+                $('.btn-disable-on-submit')
+                    .removeClass("is-disabled")
+                    .attr("disabled", false);
             }
         });
 

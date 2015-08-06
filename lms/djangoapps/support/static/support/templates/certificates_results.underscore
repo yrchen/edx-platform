@@ -29,7 +29,7 @@
         <td><%- cert.get("modified") %></td>
         <td>
             <button
-                class="btn-cert-regenerate"
+                class="btn-cert-regenerate btn-disable-on-submit"
                 data-username="<%- cert.get("username") %>"
                 data-course-key="<%- cert.get("course_key") %>"
             ><%- gettext("Regenerate") %></button>
