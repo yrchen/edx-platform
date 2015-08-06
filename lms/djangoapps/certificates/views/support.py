@@ -47,6 +47,8 @@ def search_by_user(request):
     certificates = api.get_certificates_for_user(user.username)
     for cert in certificates:
         cert["course_key"] = unicode(cert["course_key"])
+        cert["created"] = cert["created"].isoformat()
+        cert["modified"] = cert["modified"].isoformat()
 
     return JsonResponse(certificates)
 
@@ -85,6 +87,6 @@ def regenerate_certificate_for_user(request):
     if not CourseEnrollment.is_enrolled(params["user"], params["course_key"]):
         return HttpResponseBadRequest("The user is not enrolled in the course")
 
-    status = api.regenerate_user_certificates(params["user"], params["course_key"], course=course)
+    api.regenerate_user_certificates(params["user"], params["course_key"], course=course)
 
     return HttpResponse(200)
