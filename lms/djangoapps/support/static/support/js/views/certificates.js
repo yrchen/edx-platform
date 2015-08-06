@@ -24,7 +24,10 @@
             render: function() {
                 this.$el.html(_.template(certificatesTpl));
 
-                // TODO
+                // If there is an initial query, then immediately trigger a search.
+                // This is useful because it allows users to share search results:
+                // if the URL contains ?query="foo" then anyone who loads that URL
+                // will automatically search for "foo".
                 if (this.initialQuery) {
                     this.setUserQuery(this.initialQuery);
                     this.triggerSearch();
@@ -53,10 +56,12 @@
                 // Prevent form submission, since we're handling it ourselves.
                 event.preventDefault();
 
-                // TODO -- explain
+                // Push a URL into history with the search query as a GET parameter.
+                // That way, if the user reloads the page or sends someone the link
+                // then the same search will be performed on page load.
                 window.history.pushState({}, window.document.title, url);
 
-                // TODO
+                // Perform a search for the user's certificates.
                 this.disableButtons();
                 this.certificates.setUserQuery(query);
                 this.certificates.fetch({
@@ -68,6 +73,9 @@
             regenerateCertificate: function(event) {
                 var $button = $(event.target);
 
+                // Regenerate certificates for a particular user and course.
+                // If this is successful, reload the certificate results so they show
+                // the updated status.
                 this.disableButtons();
                 $.ajax({
                     url: "/certificates/regenerate",
@@ -98,6 +106,10 @@
             },
 
             handleRegenerateError: function(jqxhr) {
+                // Since there are multiple "regenerate" buttons on the page,
+                // it's difficult to show the error message in the UI.
+                // Since this page is used only by internal staff, I think the
+                // quick-and-easy way is reasonable.
                 alert(jqxhr.responseText);
                 this.enableButtons();
             },
