@@ -638,7 +638,7 @@ def _has_access_string(user, action, perm):
 
     'staff' -- global staff access.
     'support' -- access to student support functionality
-    'certificates' --- TODO
+    'certificates' --- access to view and regenerate certificates for other users.
     """
 
     def check_staff():
@@ -651,18 +651,8 @@ def _has_access_string(user, action, perm):
         return ACCESS_GRANTED if GlobalStaff().has_user(user) else ACCESS_DENIED
 
     def check_support():
-        """TODO """
+        """Check that the user has access to the support UI. """
         if perm != 'global':
-            debug("TODO")
-            return ACCESS_DENIED
-        return (
-            ACCESS_GRANTED if GlobalStaff().has_user(user) or SupportStaffRole().has_user(user)
-            else ACCESS_DENIED
-        )
-
-    def check_certificates():
-        if perm != 'global':
-            debug("TODO")
             return ACCESS_DENIED
         return (
             ACCESS_GRANTED if GlobalStaff().has_user(user) or SupportStaffRole().has_user(user)
@@ -672,7 +662,7 @@ def _has_access_string(user, action, perm):
     checkers = {
         'staff': check_staff,
         'support': check_support,
-        'certificates': check_certificates,
+        'certificates': check_support,
     }
 
     return _dispatch(checkers, action, user, perm)

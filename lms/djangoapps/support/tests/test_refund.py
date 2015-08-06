@@ -1,5 +1,11 @@
 """
 Tests for refunds on the support dashboard
+
+DEPRECATION WARNING:
+This test suite is deliberately separate from the other view tests
+so we can easily deprecate it once the transition from shoppingcart
+to the E-Commerce service is complete.
+
 """
 import datetime
 

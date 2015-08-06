@@ -1,3 +1,3 @@
 """
-TODO -- models for student support.
+Models for the student support app.
 """

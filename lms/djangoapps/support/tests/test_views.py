@@ -12,7 +12,7 @@ from student.tests.factories import UserFactory
 
 class SupportViewTestCase(TestCase):
     """
-    TODO
+    Base class for support view tests.
     """
 
     USERNAME = "support"
@@ -20,7 +20,7 @@ class SupportViewTestCase(TestCase):
     PASSWORD = "support"
 
     def setUp(self):
-        """TODO """
+        """Create a user and log in. """
         super(SupportViewTestCase, self).setUp()
         self.user = UserFactory(username=self.USERNAME, email=self.EMAIL, password=self.PASSWORD)
         success = self.client.login(username=self.USERNAME, password=self.PASSWORD)
@@ -84,7 +84,7 @@ class SupportViewIndexTests(SupportViewTestCase):
     ]
 
     def setUp(self):
-        """TODO """
+        """Make the user support staff. """
         super(SupportViewIndexTests, self).setUp()
         SupportStaffRole().add_users(self.user)
 
@@ -92,24 +92,27 @@ class SupportViewIndexTests(SupportViewTestCase):
         response = self.client.get(reverse("support:index"))
         self.assertContains(response, "Support")
 
+        # Check that all the expected links appear on the index page.
         for url_name in self.EXPECTED_URL_NAMES:
             self.assertContains(response, reverse(url_name))
 
 
 class SupportViewCertificatesTests(SupportViewTestCase):
     """
-    TODO
+    Tests for the certificates support view.
     """
     def setUp(self):
-        """TODO """
+        """Make the user support staff. """
         super(SupportViewCertificatesTests, self).setUp()
         SupportStaffRole().add_users(self.user)
 
     def test_certificates_no_query(self):
+        # Check that an empty initial query is passed to the JavaScript client correctly.
         response = self.client.get(reverse("support:certificates"))
         self.assertContains(response, "userQuery: ''")
 
     def test_certificates_with_query(self):
+        # Check that an initial query is passed to the JavaScript client.
         url = reverse("support:certificates") + "?query=student@example.com"
         response = self.client.get(url)
         self.assertContains(response, "userQuery: 'student@example.com'")

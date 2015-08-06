@@ -1,7 +1,14 @@
 """
-Views for support dashboard
+Views for manual refunds in the student support UI.
 
-TODO update this docstring
+This interface is used by the support team to track refunds
+entered manually in CyberSource (our payment gateway).
+
+DEPRECATION WARNING:
+We are currently in the process of replacing lms/djangoapps/shoppingcart
+with an E-Commerce service that supports automatic refunds.  Once that
+transition is complete, we can remove this view.
+
 """
 import logging
 

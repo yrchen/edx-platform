@@ -30,7 +30,9 @@ log = logging.getLogger(__name__)
 
 
 def require_certificate_permission(func):
-    """TODO """
+    """
+    View decorator that requires permission to view and regenerate certificates.
+    """
     @wraps(func)
     def inner(request, *args, **kwargs):
         if has_access(request.user, "certificates", "global"):
@@ -44,10 +46,39 @@ def require_certificate_permission(func):
 @require_GET
 @require_certificate_permission
 def search_by_user(request):
-    """TODO """
+    """
+    Search for certificates for a particular user.
+
+    Supports search by either username or email address.
+
+    Arguments:
+        request (HttpRequest): The request object.
+
+    Returns:
+        JsonResponse
+
+    Example Usage:
+        GET /certificates/search?query=bob@example.com
+
+        Response: 200 OK
+        Content-Type: application/json
+        [
+            {
+                "username": "bob",
+                "course_key": "edX/DemoX/Demo_Course",
+                "type": "verified",
+                "status": "downloadable",
+                "download_url": "http://www.example.com/cert.pdf",
+                "grade": "0.98",
+                "created": 2015-07-31T00:00:00Z,
+                "modified": 2015-07-31T00:00:00Z
+            }
+        ]
+
+    """
     query = request.GET.get("query")
     if not query:
-        return JsonResponse({})
+        return JsonResponse([])
 
     try:
         user = User.objects.get(Q(email=query) | Q(username=query))
@@ -64,7 +95,15 @@ def search_by_user(request):
 
 
 def _validate_regen_post_params(params):
-    """TODO """
+    """
+    Validate request POST parameters to the regenerate certificates end-point.
+
+    Arguments:
+        params (QueryDict): Request parameters.
+
+    Returns: tuple of (dict, HttpResponse)
+
+    """
     # Validate the username
     try:
         username = params.get("username")
@@ -86,17 +125,38 @@ def _validate_regen_post_params(params):
 @require_POST
 @require_certificate_permission
 def regenerate_certificate_for_user(request):
-    """TODO """
+    """
+    Regenerate certificates for a user.
+
+    This is meant to be used by support staff through the UI in lms/djangoapps/support
+
+    Arguments:
+        request (HttpRequest): The request object
+
+    Returns:
+        HttpResponse
+
+    Example Usage:
+
+        POST /certificates/regenerate
+            * username: "bob"
+            * course_key: "edX/DemoX/Demo_Course"
+
+        Response: 200 OK
+
+    """
+    # Check the POST parameters, returning a 400 response if they're not valid.
     params, response = _validate_regen_post_params(request.POST)
     if response is not None:
         return response
 
-    # TODO: really shouldn't need to do this...
+    # Check that the course exists
     course = modulestore().get_course(params["course_key"])
     if course is None:
         msg = _("The course {course_key} does not exist").format(course_key=params["course_key"])
         return HttpResponseBadRequest(msg)
 
+    # Check that the user is enrolled in the course
     if not CourseEnrollment.is_enrolled(params["user"], params["course_key"]):
         msg = _("User {username} is not enrolled in the course {course_key}").format(
             username=params["user"].username,
@@ -104,9 +164,13 @@ def regenerate_certificate_for_user(request):
         )
         return HttpResponseBadRequest(msg)
 
+    # Attempt to regenerate certificates
     try:
         api.regenerate_user_certificates(params["user"], params["course_key"], course=course)
-    except:
+    except:  # pylint: disable=broad-except
+        # We are pessimistic about the kinds of errors that might get thrown by the
+        # certificates API.  This may be overkill, but we're logging everything so we can
+        # track down unexpected errors.
         log.exception("Could not regenerate certificates for user %s in course %s", params["user"].id, params["course_key"])
         return HttpResponseServerError(_("An unexpected error occurred while regenerating certificates."))
 

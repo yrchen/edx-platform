@@ -1,5 +1,5 @@
 """
-URLs for support dashboard
+URLs for the student support app.
 """
 from django.conf.urls import patterns, url
 

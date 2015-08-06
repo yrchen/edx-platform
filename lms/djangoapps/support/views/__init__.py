@@ -1,5 +1,5 @@
 """
-TODO
+Aggregate all views for the support app.
 """
 from .index import *
 from .certificate import *

@@ -18,7 +18,9 @@ from certificates.models import GeneratedCertificate, CertificateStatuses
 
 
 class CertificateSupportTestCase(TestCase):
-    """TODO """
+    """
+    Base class for tests of the certificate support views.
+    """
 
     SUPPORT_USERNAME = "support"
     SUPPORT_EMAIL = "support@example.com"
@@ -35,7 +37,10 @@ class CertificateSupportTestCase(TestCase):
     CERT_DOWNLOAD_URL = "http://www.example.com/cert.pdf"
 
     def setUp(self):
-        """TODO """
+        """
+        Create a support team member and a student with a certificate.
+        Log in as the support team member.
+        """
         super(CertificateSupportTestCase, self).setUp()
 
         # Create the support staff user
@@ -70,7 +75,9 @@ class CertificateSupportTestCase(TestCase):
 
 @ddt.ddt
 class CertificateSearchTests(CertificateSupportTestCase):
-    """TODO """
+    """
+    Tests for the certificate search end-point used by the support team.
+    """
 
     @ddt.data(
         (GlobalStaff, True),
@@ -127,17 +134,21 @@ class CertificateSearchTests(CertificateSupportTestCase):
         self.assertEqual(retrieved_cert["type"], self.CERT_MODE)
 
     def _search(self, query):
-        """TODO """
+        """Execute a search and return the response. """
         url = reverse("certificates:search") + "?query=" + query
         return self.client.get(url)
 
 
 @ddt.ddt
 class CertificateRegenerateTests(ModuleStoreTestCase, CertificateSupportTestCase):
-    """TODO """
+    """
+    Tests for the certificate regeneration end-point used by the support team.
+    """
 
     def setUp(self):
-        """TODO """
+        """
+        Create a course and enroll the student in the course.
+        """
         super(CertificateRegenerateTests, self).setUp()
         self.course = CourseFactory(
             org=self.CERT_COURSE_KEY.org,
@@ -235,7 +246,7 @@ class CertificateRegenerateTests(ModuleStoreTestCase, CertificateSupportTestCase
         self.assertEqual(num_certs, 1)
 
     def _regenerate(self, course_key=None, username=None):
-        """TODO """
+        """Call the regeneration end-point and return the response. """
         url = reverse("certificates:regenerate_certificate_for_user")
         params = {}
 

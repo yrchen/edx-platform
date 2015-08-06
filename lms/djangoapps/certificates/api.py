@@ -30,7 +30,30 @@ log = logging.getLogger("edx.certificate")
 
 
 def get_certificates_for_user(username):
-    """TODO """
+    """
+    Retrieve certificate information for a particular user.
+
+    Arguments:
+        username (unicode): The identifier of the user.
+
+    Returns: list
+
+    Example Usage:
+    >>> get_certificates_for_user("bob")
+    [
+        {
+            "username": "bob",
+            "course_key": "edX/DemoX/Demo_Course",
+            "type": "verified",
+            "status": "downloadable",
+            "download_url": "http://www.example.com/cert.pdf",
+            "grade": "0.98",
+            "created": 2015-07-31T00:00:00Z,
+            "modified": 2015-07-31T00:00:00Z
+        }
+    ]
+
+    """
     return [
         {
             "username": username,

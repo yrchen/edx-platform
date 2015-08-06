@@ -312,7 +312,9 @@ class CourseCreatorRole(RoleBase):
 
 @register_access_role
 class SupportStaffRole(RoleBase):
-    """TODO """
+    """
+    Student support team members.
+    """
     ROLE = "support"
 
     def __init__(self, *args, **kwargs):
