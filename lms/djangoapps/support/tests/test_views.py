@@ -36,17 +36,26 @@ class SupportViewAccessTests(SupportViewTestCase):
     @ddt.data(
         ("support:index", GlobalStaff, True),
         ("support:index", SupportStaffRole, True),
-        ("support:index", None, True),
+        ("support:index", None, False),
         ("support:certificates", GlobalStaff, True),
         ("support:certificates", SupportStaffRole, True),
-        ("support:certificates", None, True),
+        ("support:certificates", None, False),
         ("support:refund", GlobalStaff, True),
         ("support:refund", SupportStaffRole, True),
-        ("support:refund", None, True),
+        ("support:refund", None, False),
     )
     @ddt.unpack
     def test_access(self, url_name, role, has_access):
-        self.fail("TODO")
+        if role is not None:
+            role().add_users(self.user)
+
+        url = reverse(url_name)
+        response = self.client.get(url)
+
+        if has_access:
+            self.assertEqual(response.status_code, 200)
+        else:
+            self.assertEqual(response.status_code, 403)
 
     @ddt.data("support:index", "support:certificates", "support:refund")
     def test_require_login(self, url_name):
@@ -75,6 +84,7 @@ class SupportViewIndexTests(SupportViewTestCase):
     ]
 
     def setUp(self):
+        """TODO """
         super(SupportViewIndexTests, self).setUp()
         SupportStaffRole().add_users(self.user)
 
@@ -90,9 +100,16 @@ class SupportViewCertificatesTests(SupportViewTestCase):
     """
     TODO
     """
+    def setUp(self):
+        """TODO """
+        super(SupportViewCertificatesTests, self).setUp()
+        SupportStaffRole().add_users(self.user)
 
     def test_certificates_no_query(self):
-        self.fail("TODO")
+        response = self.client.get(reverse("support:certificates"))
+        self.assertContains(response, "userQuery: ''")
 
     def test_certificates_with_query(self):
-        self.fail("TODO")
+        url = reverse("support:certificates") + "?query=student@example.com"
+        response = self.client.get(url)
+        self.assertContains(response, "userQuery: 'student@example.com'")
