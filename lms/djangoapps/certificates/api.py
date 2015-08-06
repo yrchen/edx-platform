@@ -60,14 +60,18 @@ def get_certificates_for_user(username):
             "course_key": cert.course_id,
             "type": cert.mode,
             "status": cert.status,
+            "grade": cert.grade,
+            "created": cert.created_date,
+            "modified": cert.modified_date,
+
+            # NOTE: the download URL is not currently being set for webview certificates.
+            # In the future, we can update this to construct a URL to the webview certificate
+            # for courses that have this feature enabled.
             "download_url": (
                 cert.download_url
                 if cert.status == CertificateStatuses.downloadable
                 else None
             ),
-            "grade": cert.grade,
-            "created": cert.created_date,
-            "modified": cert.modified_date,
         }
         for cert in GeneratedCertificate.objects.filter(user__username=username).order_by("course_id")
     ]
