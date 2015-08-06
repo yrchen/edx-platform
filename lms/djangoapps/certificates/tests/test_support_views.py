@@ -10,8 +10,10 @@ from django.test import TestCase
 
 from opaque_keys.edx.keys import CourseKey
 from student.tests.factories import UserFactory
+from student.models import CourseEnrollment
 from student.roles import GlobalStaff, SupportStaffRole
 from xmodule.modulestore.tests.django_utils import ModuleStoreTestCase
+from xmodule.modulestore.tests.factories import CourseFactory
 from certificates.models import GeneratedCertificate, CertificateStatuses
 
 
@@ -137,6 +139,12 @@ class CertificateRegenerateTests(ModuleStoreTestCase, CertificateSupportTestCase
     def setUp(self):
         """TODO """
         super(CertificateRegenerateTests, self).setUp()
+        self.course = CourseFactory(
+            org=self.CERT_COURSE_KEY.org,
+            course=self.CERT_COURSE_KEY.course,
+            run=self.CERT_COURSE_KEY.run,
+        )
+        CourseEnrollment.enroll(self.student, self.CERT_COURSE_KEY, self.CERT_MODE)
 
     @ddt.data(
         (GlobalStaff, True),
@@ -157,8 +165,7 @@ class CertificateRegenerateTests(ModuleStoreTestCase, CertificateSupportTestCase
         # Make a POST request
         # Since we're not passing valid parameters, we'll get an error response
         # but at least we'll know we have access
-        url = reverse("certificates:regenerate_certificate_for_user")
-        response = self.client.post(url)
+        response = self._regenerate()
 
         if has_access:
             self.assertEqual(response.status_code, 400)
@@ -166,13 +173,76 @@ class CertificateRegenerateTests(ModuleStoreTestCase, CertificateSupportTestCase
             self.assertEqual(response.status_code, 403)
 
     def test_regenerate_certificate(self):
-        self.fail("TODO")
+        response = self._regenerate(
+            course_key=self.course.id,
+            username=self.STUDENT_USERNAME,
+        )
+        self.assertEqual(response.status_code, 200)
+
+        # Check that the user's certificate was updated
+        # Since the student hasn't actually passed the course,
+        # we'd expect that the certificate status will be "notpassing"
+        cert = GeneratedCertificate.objects.get(user=self.student)
+        self.assertEqual(cert.status, CertificateStatuses.notpassing)
+
+    def test_regenerate_certificate_missing_params(self):
+        # Missing username
+        response = self._regenerate(course_key=self.CERT_COURSE_KEY)
+        self.assertEqual(response.status_code, 400)
+
+        # Missing course key
+        response = self._regenerate(username=self.STUDENT_USERNAME)
+        self.assertEqual(response.status_code, 400)
+
+    def test_regenerate_no_such_user(self):
+        response = self._regenerate(
+            course_key=unicode(self.CERT_COURSE_KEY),
+            username="invalid_username",
+        )
+        self.assertEqual(response.status_code, 400)
 
     def test_regenerate_no_such_course(self):
-        self.fail("TODO")
+        response = self._regenerate(
+            course_key=CourseKey.from_string("edx/invalid/course"),
+            username=self.STUDENT_USERNAME
+        )
+        self.assertEqual(response.status_code, 400)
 
     def test_regenerate_user_is_not_enrolled(self):
-        self.fail("TODO")
+        # Unenroll the user
+        CourseEnrollment.unenroll(self.student, self.CERT_COURSE_KEY)
+
+        # Can no longer regenerate certificates for the user
+        response = self._regenerate(
+            course_key=self.CERT_COURSE_KEY,
+            username=self.STUDENT_USERNAME
+        )
+        self.assertEqual(response.status_code, 400)
 
     def test_regenerate_user_has_no_certificate(self):
-        self.fail("TODO")
+        # Delete the user's certificate
+        GeneratedCertificate.objects.all().delete()
+
+        # Should be able to regenerate
+        response = self._regenerate(
+            course_key=self.CERT_COURSE_KEY,
+            username=self.STUDENT_USERNAME
+        )
+        self.assertEqual(response.status_code, 200)
+
+        # A new certificate is created
+        num_certs = GeneratedCertificate.objects.filter(user=self.student).count()
+        self.assertEqual(num_certs, 1)
+
+    def _regenerate(self, course_key=None, username=None):
+        """TODO """
+        url = reverse("certificates:regenerate_certificate_for_user")
+        params = {}
+
+        if course_key is not None:
+            params["course_key"] = course_key
+
+        if username is not None:
+            params["username"] = username
+
+        return self.client.post(url, params)
