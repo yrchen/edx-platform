@@ -34,7 +34,7 @@ def require_certificate_permission(func):
     View decorator that requires permission to view and regenerate certificates.
     """
     @wraps(func)
-    def inner(request, *args, **kwargs):
+    def inner(request, *args, **kwargs):  # pylint:disable=missing-docstring
         if has_access(request.user, "certificates", "global"):
             return func(request, *args, **kwargs)
         else:
@@ -167,11 +167,15 @@ def regenerate_certificate_for_user(request):
     # Attempt to regenerate certificates
     try:
         api.regenerate_user_certificates(params["user"], params["course_key"], course=course)
-    except:  # pylint: disable=broad-except
+    except:  # pylint: disable=bare-except
         # We are pessimistic about the kinds of errors that might get thrown by the
         # certificates API.  This may be overkill, but we're logging everything so we can
         # track down unexpected errors.
-        log.exception("Could not regenerate certificates for user %s in course %s", params["user"].id, params["course_key"])
+        log.exception(
+            "Could not regenerate certificates for user %s in course %s",
+            params["user"].id,
+            params["course_key"]
+        )
         return HttpResponseServerError(_("An unexpected error occurred while regenerating certificates."))
 
     log.info(

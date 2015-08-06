@@ -185,7 +185,7 @@ class CertificateRegenerateTests(ModuleStoreTestCase, CertificateSupportTestCase
 
     def test_regenerate_certificate(self):
         response = self._regenerate(
-            course_key=self.course.id,
+            course_key=self.course.id,  # pylint: disable=no-member
             username=self.STUDENT_USERNAME,
         )
         self.assertEqual(response.status_code, 200)

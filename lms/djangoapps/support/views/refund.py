@@ -70,11 +70,16 @@ class RefundForm(forms.Form):
         if user and course_id:
             self.cleaned_data['enrollment'] = enrollment = CourseEnrollment.get_or_create_enrollment(user, course_id)
             if enrollment.refundable():
-                raise forms.ValidationError(_("Course {course_id} not past the refund window.").format(course_id=course_id))
+                msg = _("Course {course_id} not past the refund window.").format(course_id=course_id)
+                raise forms.ValidationError(msg)
             try:
-                self.cleaned_data['cert'] = enrollment.certificateitem_set.filter(mode='verified', status='purchased')[0]
+                self.cleaned_data['cert'] = enrollment.certificateitem_set.filter(
+                    mode='verified',
+                    status='purchased'
+                )[0]
             except IndexError:
-                raise forms.ValidationError(_("No order found for {user} in course {course_id}").format(user=user, course_id=course_id))
+                msg = _("No order found for {user} in course {course_id}").format(user=user, course_id=course_id)
+                raise forms.ValidationError(msg)
         return self.cleaned_data
 
     def is_valid(self):
@@ -127,6 +132,18 @@ class RefundSupportView(FormView):
         enrollment.update_enrollment(is_active=False)
 
         log.info(u"%s manually refunded %s %s", self.request.user, user, course_id)
-        messages.success(self.request, _("Unenrolled {user} from {course_id}").format(user=user, course_id=course_id))
-        messages.success(self.request, _("Refunded {cost} for order id {order_id}").format(cost=cert.unit_cost, order_id=cert.order.id))
+        messages.success(
+            self.request,
+            _("Unenrolled {user} from {course_id}").format(
+                user=user,
+                course_id=course_id
+            )
+        )
+        messages.success(
+            self.request,
+            _("Refunded {cost} for order id {order_id}").format(
+                cost=cert.unit_cost,
+                order_id=cert.order.id
+            )
+        )
         return HttpResponseRedirect('/support/refund/')

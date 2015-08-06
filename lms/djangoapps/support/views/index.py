@@ -6,6 +6,6 @@ from support.decorators import require_support_permission
 
 
 @require_support_permission
-def index(request, *args, **kwargs):
+def index(request):  # pylint: disable=unused-argument
     """Render the support index view. """
     return render_to_response("support/index.html")

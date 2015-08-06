@@ -31,7 +31,7 @@ from certificates.models import (
 )
 
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 class CourseDoesNotExist(Exception):
@@ -72,6 +72,7 @@ def get_certificate_description(mode, certificate_type, platform_name):
 
 
 # pylint: disable=bad-continuation
+# pylint: disable=too-many-statements
 def _update_certificate_context(context, course, user, user_certificate):
     """
     Build up the certificate web view context using the provided values
@@ -344,7 +345,7 @@ def render_html_view(request, user_id, course_id):
                 }
             )
         except BadgeAssertion.DoesNotExist:
-            logger.warn(
+            log.warn(
                 "Could not find badge for %s on course %s.",
                 user.id,
                 course_key,

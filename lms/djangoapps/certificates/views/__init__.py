@@ -1,7 +1,8 @@
 """
 Aggregate all views exposed by the certificates app.
 """
-from xqueue import *
-from support import *
-from webview import *
-from badges import *
+# pylint: disable=wildcard-import
+from .xqueue import *
+from .support import *
+from .webview import *
+from .badges import *
