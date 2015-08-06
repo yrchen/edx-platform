@@ -1,8 +1,6 @@
-<p>Hello World Underscore!</p>
-
 <form class="certificates-form">
-    <input type="text" name="query" value="" placeholder="username or email"></input>
-    <input type="submit" value="Search"></input>
+    <input type="text" name="query" value="" placeholder="<%- gettext("username or email") %>"></input>
+    <input type="submit" value="<%- gettext("Search") %>"></input>
 </form>
 
 <div class="certificates-results">

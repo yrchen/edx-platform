@@ -1,13 +1,14 @@
 <% if (certificates.length === 0) { %>
-<p>No results</p>
+<p><%- gettext("No results") %></p>
 <% } else { %>
 <table>
     <tr>
-        <th>Course Key</th>
-        <th>Type</th>
-        <th>Status</th>
-        <th>Grade</th>
-        <th>Last Updated</th>
+        <th><%- gettext("Course Key") %></th>
+        <th><%- gettext("Type") %></th>
+        <th><%- gettext("Status") %></th>
+        <th><%- gettext("Download URL") %></th>
+        <th><%- gettext("Grade") %></th>
+        <th><%- gettext("Last Updated") %></th>
         <th></th>
     </tr>
     <% for (var i = 0; i < certificates.length; i++) {
@@ -17,6 +18,13 @@
         <td><%- cert.get("course_key") %></td>
         <td><%- cert.get("type") %></td>
         <td><%- cert.get("status") %></td>
+        <td>
+            <% if (cert.get("download_url")) { %>
+                <a href="<%- cert.get("download_url") %>">Download</a>
+            <% } else { %>
+                <%- gettext("Not available") %>
+            <% } %>
+        </td>
         <td><%- cert.get("grade") %></td>
         <td><%- cert.get("modified") %></td>
         <td>
@@ -24,7 +32,7 @@
                 class="btn-cert-regenerate"
                 data-username="<%- cert.get("username") %>"
                 data-course-key="<%- cert.get("course_key") %>"
-            >Regenerate</button>
+            ><%- gettext("Regenerate") %></button>
         </td>
     </tr>
     <% } %>
