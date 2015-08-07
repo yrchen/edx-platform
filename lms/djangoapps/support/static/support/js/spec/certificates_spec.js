@@ -32,18 +32,9 @@ define([
             },
         ];
 
-        var searchFor = function(query, requests, response) {
+        var getSearchResults = function() {
             var results = [];
 
-            // Enter the search term and submit
-            view.setUserQuery(query);
-            view.triggerSearch();
-
-            // Simulate a response from the server
-            AjaxHelpers.expectJsonRequest(requests, "GET", "/certificates/search?query=student@example.com");
-            AjaxHelpers.respondWithJson(requests, response);
-
-            // Retrieve the results from the DOM
             $(".certificates-results tr").each(function(rowIndex, rowValue) {
                 var columns = [];
                 $(rowValue).children("td").each(function(colIndex, colValue) {
@@ -56,6 +47,21 @@ define([
             });
 
             return results;
+        };
+
+        var searchFor = function(query, requests, response) {
+            // Enter the search term and submit
+            view.setUserQuery(query);
+            view.triggerSearch();
+
+            // Simulate a response from the server
+            AjaxHelpers.expectJsonRequest(requests, "GET", "/certificates/search?query=student@example.com");
+            AjaxHelpers.respondWithJson(requests, response);
+        };
+
+        var regenerateCerts = function(username, courseKey) {
+            var sel = '.btn-cert-regenerate[data-course-key="' + courseKey + '"]';
+            $(sel).click();
         };
 
         beforeEach(function () {
@@ -72,7 +78,10 @@ define([
 
         it('searches for certificates and displays results', function() {
             var requests = AjaxHelpers.requests(this),
-                results = searchFor("student@example.com", requests, SEARCH_RESULTS);
+                results = [];
+
+            searchFor("student@example.com", requests, SEARCH_RESULTS);
+            results = getSearchResults();
 
             // Expect that the results displayed on the page match the results
             // returned by the server.
@@ -96,15 +105,59 @@ define([
         });
 
         it('searches for certificates and displays a message when there are no results', function() {
-            expect(1).toBe(2);
+            var requests = AjaxHelpers.requests(this),
+                results = [];
+
+            searchFor("student@example.com", requests, []);
+            results = getSearchResults();
+
+            // Expect that no results are found
+            expect(results.length).toEqual(0);
+
+            // Expect a message saying there are no results
+            expect($(".certificates-results").text()).toContain("No results");
         });
 
         it('automatically searches for an initial query if one is provided', function() {
-            expect(1).toBe(2);
+            var requests = AjaxHelpers.requests(this),
+                results = [];
+
+            // Re-render the view, this time providing an initial query.
+            view = new CertificatesView({
+                el: $('.certificates-content'),
+                userQuery: "student@example.com"
+            }).render();
+
+            // Simulate a response from the server
+            AjaxHelpers.expectJsonRequest(requests, "GET", "/certificates/search?query=student@example.com");
+            AjaxHelpers.respondWithJson(requests, SEARCH_RESULTS);
+
+            // Check the search results
+            results = getSearchResults();
+            expect(results.length).toEqual(SEARCH_RESULTS.length);
         });
 
         it('regenerates a certificate for a student', function() {
-            expect(1).toBe(2);
+            var requests = AjaxHelpers.requests(this);
+
+            // Trigger a search
+            searchFor("student@example.com", requests, SEARCH_RESULTS);
+
+            // Click the button to regenerate certificates for a user
+            regenerateCerts("student", "course-v1:edX+DemoX+Demo_Course");
+
+            // Expect a request to the server
+            AjaxHelpers.expectPostRequest(
+                requests,
+                "/certificates/regenerate",
+                $.param({
+                    username: "student",
+                    course_key: "course-v1:edX+DemoX+Demo_Course"
+                })
+            );
+
+            // Respond with success
+            AjaxHelpers.respondWithJson(requests, "");
         });
 
         it('displays an error when a search cannot be performed', function() {
