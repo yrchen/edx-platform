@@ -159,9 +159,5 @@ define([
             // Respond with success
             AjaxHelpers.respondWithJson(requests, "");
         });
-
-        it('displays an error when a search cannot be performed', function() {
-            expect(1).toBe(2);
-        });
     });
 });
