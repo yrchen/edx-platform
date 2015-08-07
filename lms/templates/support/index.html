@@ -12,12 +12,13 @@ ${_("Student Support")}
 </%block>
 
 <%block name="content">
-<section class="container">
+<section class="container outside-app">
   <h1>${_("Student Support")}</h1>
   <p>${_("Welcome to student support!  TODO")}</p>
   <ul>
-    <li><a href="${reverse("support:certificates")}">${_("Certificates")}</a>: ${_("TODO: use this to regenerate certificates for a student")}</li>
-    <li><a href="${reverse("support:refund")}">${_("Manual Refund")}</a>: TODO msg and this will be deprecated!</li>
+    % for url in urls:
+    <li><a href="${url["url"]}">${unicode(url["name"])}</a>: ${unicode(url["description"])}</li>
+    % endfor
   </ul>
 </section>
 </%block>
