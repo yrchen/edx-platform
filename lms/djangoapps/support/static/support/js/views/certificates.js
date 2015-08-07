@@ -32,6 +32,8 @@
                     this.setUserQuery(this.initialQuery);
                     this.triggerSearch();
                 }
+
+                return this;
             },
 
             renderResults: function() {
