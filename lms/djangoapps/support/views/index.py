@@ -12,15 +12,15 @@ SUPPORT_INDEX_URLS = [
     {
         "url": reverse_lazy("support:certificates"),
         "name": _("Certificates"),
-        "description": _("TODO"),
+        "description": _("View and regenerate certificates."),
     },
 
     # DEPRECATION WARNING: We can remove this end-point
-    # once shoppingcart is deprecated.
+    # once shoppingcart has been replaced by the E-Commerce service.
     {
         "url": reverse_lazy("support:refund"),
         "name": _("Manual Refund"),
-        "description": _("TODO"),
+        "description": _("Track refunds issued directly through CyberSource."),
     },
 ]
 
