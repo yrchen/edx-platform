@@ -2,4 +2,11 @@
 // These styles are included on admin pages used by the support team.
 // ===================================================================
 
-// TODO
+.certificates-search {
+    margin: 40px 0;
+
+    input[name="query"] {
+        width: 476px;
+    }
+}
+
