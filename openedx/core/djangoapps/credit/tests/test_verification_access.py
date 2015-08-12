@@ -13,6 +13,7 @@ into verify_student.
 
 from openedx.core.djangoapps.credit.verification_access import apply_verification_access_rules
 from xmodule.modulestore.tests.django_utils import ModuleStoreTestCase
+from xmodule.modulestore.tests.factories import CourseFactory, ItemFactory, check_mongo_calls_range
 
 
 class VerificationAccessRuleTest(ModuleStoreTestCase):
@@ -22,6 +23,35 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
 
     def setUp(self):
         super(VerificationAccessRuleTest, self).setUp()
+
+        # Create a dummy course with a single verification checkpoint
+        # Because we need to check "exam" content surrounding the ICRV checkpoint,
+        # we need to create a fairly large course structure, with multiple sections,
+        # subsections, verticals, units, and items.
+        self.course = CourseFactory()
+        self.sections = [
+            ItemFactory.create(parent=self.course, category='chapter', display_name='Test Section A'),
+            ItemFactory.create(parent=self.course, category='chapter', display_name='Test Section B'),
+        ]
+        self.subsections = [
+            ItemFactory.create(parent=self.sections[0], category='sequential', display_name='Test Subsection A 1'),
+            ItemFactory.create(parent=self.sections[0], category='sequential', display_name='Test Subsection A 2'),
+            ItemFactory.create(parent=self.sections[1], category='sequential', display_name='Test Subsection B 1'),
+            ItemFactory.create(parent=self.sections[1], category='sequential', display_name='Test Subsection B 2'),
+        ]
+        self.verticals = [
+            ItemFactory.create(parent=self.subsections[0], category='vertical', display_name='Test Unit A 1 a'),
+            ItemFactory.create(parent=self.subsections[0], category='vertical', display_name='Test Unit A 1 b'),
+            ItemFactory.create(parent=self.subsections[1], category='vertical', display_name='Test Unit A 2 a'),
+            ItemFactory.create(parent=self.subsections[1], category='vertical', display_name='Test Unit A 2 b'),
+            ItemFactory.create(parent=self.subsections[2], category='vertical', display_name='Test Unit B 1 a'),
+            ItemFactory.create(parent=self.subsections[2], category='vertical', display_name='Test Unit B 1 b'),
+            ItemFactory.create(parent=self.subsections[3], category='vertical', display_name='Test Unit B 2 a'),
+            ItemFactory.create(parent=self.subsections[3], category='vertical', display_name='Test Unit B 2 b'),
+        ]
+
+        self.icrv = ItemFactory.create(parent=self.verticals[0], category='edx-reverification-block')
+        self.sibling_problem = ItemFactory.create(parent=self.verticals[0], category='problem')
 
     def test_creates_user_partitions(self):
         self.fail("TODO")
