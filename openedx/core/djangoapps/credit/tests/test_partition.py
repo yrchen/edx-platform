@@ -140,17 +140,3 @@ class ReverificationPartitionTest(ModuleStoreTestCase):
                 self.user_partition
             )
         )
-
-    def test_key_for_partition(self):
-        # Test that 'key_for_partition' method of partition scheme
-        # 'VerificationPartitionScheme' returns desired format for
-        # partition id.
-
-        self.assertEqual(
-            'verification:{}'.format(
-                self.checkpoint_location
-            ),
-            VerificationPartitionScheme.key_for_partition(
-                self.checkpoint_location
-            )
-        )

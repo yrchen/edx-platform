@@ -12,6 +12,7 @@ into verify_student.
 """
 
 from openedx.core.djangoapps.credit.verification_access import apply_verification_access_rules
+from xmodule.modulestore.django import modulestore
 from xmodule.modulestore.tests.django_utils import ModuleStoreTestCase
 from xmodule.modulestore.tests.factories import CourseFactory, ItemFactory, check_mongo_calls_range
 
@@ -54,7 +55,13 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
         self.sibling_problem = ItemFactory.create(parent=self.verticals[0], category='problem')
 
     def test_creates_user_partitions(self):
-        self.fail("TODO")
+        # Check that a new partition is created for the verification checkpoint
+        course = self._apply_rules()
+        self.assertEqual(course.user_partitions, [
+            {
+                "foo": "bar"
+            }
+        ])
 
     def test_removes_old_user_partitions(self):
         self.fail("TODO")
@@ -82,3 +89,8 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
 
     def test_query_counts_with_multiple_reverification_blocks(self):
         self.fail("TODO")
+
+    def _apply_rules(self):
+        """TODO """
+        apply_verification_access_rules(self.course.id)
+        return modulestore().get_course(self.course.id)
