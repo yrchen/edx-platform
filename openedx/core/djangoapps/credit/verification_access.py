@@ -25,10 +25,6 @@ where the groups are defined as:
    at the checkpoint.  The user can see both the verification checkpoint block
    (which shows status messaging of the verification attempt) as well as the exam content.
 
-The code that puts users into particular groups based on their verification and enrollment
-status is a user partition scheme defined in the verify_student app.  This is just a function
-mapping users to the above groups for each verification-related partition in the course.
-
 The tricky thing is that we need to update the course structure to:
 (a) define partitions for each verification checkpoint
 (b) tag the allowed groups for each verification checkpoint block
@@ -147,7 +143,6 @@ def _tag_icrv_block_and_exam(icrv_block, partitions_by_loc):
 
 
 def _update_published_item(item):
-    from nose.tools import set_trace; set_trace()
     store = modulestore()
     with store.branch_setting(ModuleStoreEnum.Branch.published_only, course_id=item.location.course_key):
         result = store.update_item(item, ModuleStoreEnum.UserID.system)
