@@ -22,6 +22,7 @@ Modulestore virtual   |          XML physical (draft, published)
 """
 import logging
 from abc import abstractmethod
+import gc
 from opaque_keys.edx.locator import LibraryLocator
 import os
 import mimetypes
@@ -455,6 +456,9 @@ class ImportManager(object):
             with self.store.bulk_operations(dest_id):
                 # Import all draft items into the courselike.
                 courselike = self.import_drafts(courselike, courselike_key, data_path, dest_id)
+
+            # force a garbace collection
+            gc.collect()
 
             yield courselike
 
