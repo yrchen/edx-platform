@@ -101,6 +101,9 @@ class ModuleStoreEnum(object):
         # user ID to use for tests that do not have a django user available
         test = -3
 
+        # user ID for automatic update by the system
+        system = -4
+
     class SortOrder(object):
         """
         Values for sorting asset metadata.

@@ -42,11 +42,14 @@ step by the LMS.  Unfortunately, that infrastructure does not yet exist, so curr
 modifying the course automatically on publish from Studio.
 
 """
+from util.db import generate_int_id
 from openedx.core.djangoapps.credit.utils import get_course_blocks
 from xmodule.modulestore.django import modulestore
 from xmodule.modulestore import ModuleStoreEnum
+from xmodule.partitions.partitions import Group, UserPartition, NoSuchUserPartitionError
 
 
+VERIFICATION_SCHEME_NAME = "verification"
 VERIFICATION_BLOCK_CATEGORY = "edx-reverification-block"
 
 
@@ -62,6 +65,11 @@ def apply_verification_access_rules(course_key):
     if not icrv_blocks:
         return
 
+    course = modulestore().get_course(course_key)
+    if course is None:
+        # TODO: log an error here
+        return
+
     # Batch all the write queries we're about to do and suppress
     # the "publish" signal to avoid an infinite call loop.
     with modulestore().bulk_operations(course_key, emit_signals=False):
@@ -69,7 +77,7 @@ def apply_verification_access_rules(course_key):
         # Update the verification definitions in the course descriptor
         # This will also clean out old verification partitions if checkpoints
         # have been deleted.
-        _set_verification_partitions(course_key, icrv_blocks)
+        _set_verification_partitions(course, icrv_blocks)
 
         # Update the allowed partition groups for the in-course-reverification block
         # and its surrounding exam content.
@@ -77,8 +85,36 @@ def apply_verification_access_rules(course_key):
             _tag_icrv_block_and_exam(block)
 
 
-def _set_verification_partitions(course_key, icrv_blocks):
-    pass
+def _unique_partition_id(course):
+    used_ids = set(p.id for p in course.user_partitions)
+    return generate_int_id(used_ids=used_ids)
+
+
+def _set_verification_partitions(course, icrv_blocks):
+
+    scheme = UserPartition.get_scheme(VERIFICATION_SCHEME_NAME)
+    if scheme is None:
+        # TODO -- log an error here
+        return
+
+    partitions = [
+        UserPartition(
+            id=_unique_partition_id(course),
+            name=u"Verification Checkpoint",
+            description=u"Verification Checkpoint",  # TODO: add anything else here?
+            scheme=scheme,
+            parameters={"location": unicode(block.location)},
+            groups=[
+                Group(scheme.NON_VERIFIED, "Not enrolled in a verified track"),
+                Group(scheme.VERIFIED_ALLOW, "Enrolled in a verified track and has access to exam content"),
+                Group(scheme.VERIFIED_DENY, "Enrolled in a verified track and does not have access to exam content"),
+            ]
+        )
+        for block in icrv_blocks
+    ]
+
+    course.user_partitions = partitions
+    modulestore().update_item(course, ModuleStoreEnum.UserID.system)
 
 
 def _tag_icrv_block_and_exam(icrv_block):

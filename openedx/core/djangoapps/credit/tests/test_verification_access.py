@@ -11,6 +11,7 @@ into verify_student.
 
 """
 
+from openedx.core.djangoapps.credit.partition_schemes import VerificationPartitionScheme
 from openedx.core.djangoapps.credit.verification_access import apply_verification_access_rules
 from xmodule.modulestore.django import modulestore
 from xmodule.modulestore.tests.django_utils import ModuleStoreTestCase
@@ -55,13 +56,25 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
         self.sibling_problem = ItemFactory.create(parent=self.verticals[0], category='problem')
 
     def test_creates_user_partitions(self):
-        # Check that a new partition is created for the verification checkpoint
+        # Transform the course by applying ICRV access rules
         course = self._apply_rules()
-        self.assertEqual(course.user_partitions, [
-            {
-                "foo": "bar"
-            }
-        ])
+
+        # Check that a new user partition was created for the ICRV block
+        self.assertEqual(len(course.user_partitions), 1)
+        partition = course.user_partitions[0]
+        self.assertEqual(partition.scheme.name, "verification")
+        self.assertEqual(partition.parameters["location"], unicode(self.icrv.location))
+
+        # Check that the groups for the partition were created correctly
+        self.assertEqual(len(partition.groups), 3)
+        self.assertItemsEqual(
+            [g.id for g in partition.groups],
+            [
+                VerificationPartitionScheme.NON_VERIFIED,
+                VerificationPartitionScheme.VERIFIED_DENY,
+                VerificationPartitionScheme.VERIFIED_ALLOW
+            ]
+        )
 
     def test_removes_old_user_partitions(self):
         self.fail("TODO")

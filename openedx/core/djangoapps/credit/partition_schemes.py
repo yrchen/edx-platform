@@ -1,5 +1,5 @@
 """
-Provides partition support to the user service.
+TODO: fix this docstring!
 """
 
 import logging
