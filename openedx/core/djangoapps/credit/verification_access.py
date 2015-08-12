@@ -42,8 +42,12 @@ step by the LMS.  Unfortunately, that infrastructure does not yet exist, so curr
 modifying the course automatically on publish from Studio.
 
 """
+from openedx.core.djangoapps.credit.utils import get_course_blocks
 from xmodule.modulestore.django import modulestore
 from xmodule.modulestore import ModuleStoreEnum
+
+
+VERIFICATION_BLOCK_CATEGORY = "edx-reverification-block"
 
 
 def apply_verification_access_rules(course_key):
@@ -53,7 +57,7 @@ def apply_verification_access_rules(course_key):
     # Retrieve all in-course reverification blocks in the course
     # Hopefully, there won't be any, so we can exit without doing
     # any additional work.
-    icrv_blocks, course = _get_icrv_blocks_and_course(course_key)
+    icrv_blocks = get_course_blocks(course_key, VERIFICATION_BLOCK_CATEGORY)
 
     if not icrv_blocks:
         return
@@ -65,7 +69,7 @@ def apply_verification_access_rules(course_key):
         # Update the verification definitions in the course descriptor
         # This will also clean out old verification partitions if checkpoints
         # have been deleted.
-        _set_verification_partitions(course, icrv_blocks)
+        _set_verification_partitions(course_key, icrv_blocks)
 
         # Update the allowed partition groups for the in-course-reverification block
         # and its surrounding exam content.
@@ -73,11 +77,7 @@ def apply_verification_access_rules(course_key):
             _tag_icrv_block_and_exam(block)
 
 
-def _get_icrv_blocks_and_course(course):
-    pass
-
-
-def _set_verification_partitions(course, icrv_blocks):
+def _set_verification_partitions(course_key, icrv_blocks):
     pass
 
 
