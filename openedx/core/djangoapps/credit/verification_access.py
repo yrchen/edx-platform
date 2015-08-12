@@ -121,7 +121,8 @@ def _set_verification_partitions(course, icrv_blocks):
     ]
 
     course.user_partitions = partitions
-    modulestore().update_item(course, ModuleStoreEnum.UserID.system)
+    _update_published_item(course)
+
     return partitions
 
 
@@ -142,6 +143,11 @@ def _tag_icrv_block_and_exam(icrv_block, partitions_by_loc):
             partition.scheme.VERIFIED_DENY,
         ]
     }
+    _update_published_item(icrv_block)
 
-    with modulestore().branch_setting(ModuleStoreEnum.Branch.published_only):
-        modulestore().update_item(icrv_block, ModuleStoreEnum.UserID.system)
+
+def _update_published_item(item):
+    from nose.tools import set_trace; set_trace()
+    store = modulestore()
+    with store.branch_setting(ModuleStoreEnum.Branch.published_only, course_id=item.location.course_key):
+        result = store.update_item(item, ModuleStoreEnum.UserID.system)
