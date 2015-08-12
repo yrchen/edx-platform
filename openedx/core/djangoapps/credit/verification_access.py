@@ -42,10 +42,44 @@ step by the LMS.  Unfortunately, that infrastructure does not yet exist, so curr
 modifying the course automatically on publish from Studio.
 
 """
+from xmodule.modulestore.django import modulestore
+from xmodule.modulestore import ModuleStoreEnum
 
 
 def apply_verification_access_rules(course_key):
     """
     TODO
     """
+    # Retrieve all in-course reverification blocks in the course
+    # Hopefully, there won't be any, so we can exit without doing
+    # any additional work.
+    icrv_blocks, course = _get_icrv_blocks_and_course(course_key)
+
+    if not icrv_blocks:
+        return
+
+    # Batch all the write queries we're about to do and suppress
+    # the "publish" signal to avoid an infinite call loop.
+    with modulestore().bulk_operations(course_key, emit_signals=False):
+
+        # Update the verification definitions in the course descriptor
+        # This will also clean out old verification partitions if checkpoints
+        # have been deleted.
+        _set_verification_partitions(course, icrv_blocks)
+
+        # Update the allowed partition groups for the in-course-reverification block
+        # and its surrounding exam content.
+        for block in icrv_blocks:
+            _tag_icrv_block_and_exam(block)
+
+
+def _get_icrv_blocks_and_course(course):
+    pass
+
+
+def _set_verification_partitions(course, icrv_blocks):
+    pass
+
+
+def _tag_icrv_block_and_exam(icrv_block):
     pass
