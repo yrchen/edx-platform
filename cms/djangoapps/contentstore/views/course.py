@@ -96,7 +96,7 @@ __all__ = ['course_info_handler', 'course_handler', 'course_listing',
            'course_info_update_handler', 'course_search_index_handler',
            'course_rerun_handler',
            'settings_handler',
-           'grading_handler',
+           'grading_handler','collect',
            'advanced_settings_handler',
            'course_notifications_handler',
            'textbooks_list_handler', 'textbooks_detail_handler',
@@ -129,6 +129,20 @@ def reindex_course_and_check_access(course_key, user):
     if not has_course_author_access(user, course_key):
         raise PermissionDenied()
     return CoursewareSearchIndexer.do_course_reindex(modulestore(), course_key)
+
+
+import gc
+def collect(request):
+    g0 = gc.collect(0)
+    g1 = gc.collect(1)
+    g2 = gc.collect(2)
+    content = """Garbage collection triggered:<br>
+    {g0} objects collected in gen 0<br>
+    {g1} objects collected in gen 1<br>
+    {g2} objects collected in gen 2<br>
+    """.format(g0=g0, g1=g1, g2=g2)
+
+    return HttpResponse(content=content)
 
 
 @login_required

@@ -52,7 +52,7 @@ def run_server(
     if port is None:
         port = DEFAULT_PORT[system]
 
-    args = [settings, 'runserver', '--traceback', '--pythonpath=.', '0.0.0.0:{}'.format(port)]
+    args = [settings, 'runserver', '--traceback', '--pythonpath=.', '0.0.0.0:{}'.format(port), '--noreload', '--nothreading']
 
     if contracts:
         args.append("--contracts")

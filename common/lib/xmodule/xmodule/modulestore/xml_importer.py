@@ -30,6 +30,7 @@ from path import path
 import json
 import re
 from lxml import etree
+import psutil
 
 from xmodule.modulestore.xml import XMLModuleStore, LibraryXMLModuleStore, ImportSystem
 from xblock.runtime import KvsFieldData, DictKeyValueStore
@@ -427,26 +428,41 @@ class ImportManager(object):
         """
         Iterate over the given directories and yield courses.
         """
+        memory_base = psutil.virtual_memory().percent
         self.preflight()
+        memory_base = log_if_memory_used("preflight", memory_base)
         for courselike_key in self.xml_module_store.modules.keys():
             try:
                 dest_id, runtime = self.get_dest_id(courselike_key)
             except DuplicateCourseError:
                 continue
 
+
+            memory_base = log_if_memory_used("getting dest id", memory_base)
+
+
             # This bulk operation wraps all the operations to populate the published branch.
             with self.store.bulk_operations(dest_id):
                 # Retrieve the course itself.
                 source_courselike, courselike, data_path = self.get_courselike(courselike_key, runtime, dest_id)
+                memory_base = log_if_memory_used("getting courselike", memory_base)
+
 
                 # Import all static pieces.
                 self.import_static(data_path, dest_id)
+                memory_base = log_if_memory_used("importing static", memory_base)
+
 
                 # Import asset metadata stored in XML.
                 self.import_asset_metadata(data_path, dest_id)
+                memory_base = log_if_memory_used("asset metadata", memory_base)
 
                 # Import all children
                 self.import_children(source_courselike, courselike, courselike_key, dest_id)
+                memory_base = log_if_memory_used("importing children", memory_base)
+
+            memory_base = log_if_memory_used("leaving 1st context manager", memory_base)
+
 
             # This bulk operation wraps all the operations to populate the draft branch with any items
             # from the /drafts subdirectory.
@@ -456,11 +472,24 @@ class ImportManager(object):
             with self.store.bulk_operations(dest_id):
                 # Import all draft items into the courselike.
                 courselike = self.import_drafts(courselike, courselike_key, data_path, dest_id)
+                log_if_memory_used("importing drafts", memory_base)
+
+            log_if_memory_used("leaving 2nd context manager", memory_base)
+
 
             # force a garbace collection
-            gc.collect()
+            log.info("\nforcing a garbarge collect: {}\n".format(psutil.virtual_memory().percent))
+            print gc.collect()
 
             yield courselike
+
+def log_if_memory_used(thing_used, memory_base):
+    delta = psutil.virtual_memory().percent - memory_base
+    if delta != 0:
+        memory_base = psutil.virtual_memory().percent
+        log.info("\n{thing_used} used memory: {delta}\n".format(thing_used=thing_used, delta=delta))
+    return memory_base
+
 
 
 class CourseImportManager(ImportManager):
