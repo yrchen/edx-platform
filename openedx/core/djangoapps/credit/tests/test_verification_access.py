@@ -13,12 +13,12 @@ into verify_student.
 
 from openedx.core.djangoapps.credit.partition_schemes import VerificationPartitionScheme
 from openedx.core.djangoapps.credit.verification_access import apply_verification_access_rules
-from xmodule.modulestore.django import modulestore
-from xmodule.modulestore.tests.django_utils import ModuleStoreTestCase
+from xmodule.modulestore import ModuleStoreEnum
+from xmodule.modulestore.tests.utils import MixedSplitTestCase
 from xmodule.modulestore.tests.factories import CourseFactory, ItemFactory, check_mongo_calls_range
 
 
-class VerificationAccessRuleTest(ModuleStoreTestCase):
+class VerificationAccessRuleTest(MixedSplitTestCase):
     """
     Tests for applying verification access rules.
     """
@@ -30,38 +30,38 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
         # Because we need to check "exam" content surrounding the ICRV checkpoint,
         # we need to create a fairly large course structure, with multiple sections,
         # subsections, verticals, units, and items.
-        self.course = CourseFactory()
+        self.course = CourseFactory(modulestore=self.store)
         self.sections = [
-            ItemFactory.create(parent=self.course, category='chapter', display_name='Test Section A'),
-            ItemFactory.create(parent=self.course, category='chapter', display_name='Test Section B'),
+            self.make_block("chapter", self.course, display_name="Test Section A"),
+            self.make_block("chapter", self.course, display_name="Test Section B"),
         ]
         self.subsections = [
-            ItemFactory.create(parent=self.sections[0], category='sequential', display_name='Test Subsection A 1'),
-            ItemFactory.create(parent=self.sections[0], category='sequential', display_name='Test Subsection A 2'),
-            ItemFactory.create(parent=self.sections[1], category='sequential', display_name='Test Subsection B 1'),
-            ItemFactory.create(parent=self.sections[1], category='sequential', display_name='Test Subsection B 2'),
+            self.make_block("sequential", self.sections[0], display_name="Test Subsection A 1"),
+            self.make_block("sequential", self.sections[0], display_name="Test Subsection A 2"),
+            self.make_block("sequential", self.sections[1], display_name="Test Subsection B 1"),
+            self.make_block("sequential", self.sections[1], display_name="Test Subsection B 2"),
         ]
         self.verticals = [
-            ItemFactory.create(parent=self.subsections[0], category='vertical', display_name='Test Unit A 1 a'),
-            ItemFactory.create(parent=self.subsections[0], category='vertical', display_name='Test Unit A 1 b'),
-            ItemFactory.create(parent=self.subsections[1], category='vertical', display_name='Test Unit A 2 a'),
-            ItemFactory.create(parent=self.subsections[1], category='vertical', display_name='Test Unit A 2 b'),
-            ItemFactory.create(parent=self.subsections[2], category='vertical', display_name='Test Unit B 1 a'),
-            ItemFactory.create(parent=self.subsections[2], category='vertical', display_name='Test Unit B 1 b'),
-            ItemFactory.create(parent=self.subsections[3], category='vertical', display_name='Test Unit B 2 a'),
-            ItemFactory.create(parent=self.subsections[3], category='vertical', display_name='Test Unit B 2 b'),
+            self.make_block("vertical", self.subsections[0], display_name="Test Unit A 1 a"),
+            self.make_block("vertical", self.subsections[0], display_name="Test Unit A 1 b"),
+            self.make_block("vertical", self.subsections[1], display_name="Test Unit A 2 a"),
+            self.make_block("vertical", self.subsections[1], display_name="Test Unit A 2 b"),
+            self.make_block("vertical", self.subsections[2], display_name="Test Unit B 1 a"),
+            self.make_block("vertical", self.subsections[2], display_name="Test Unit B 1 b"),
+            self.make_block("vertical", self.subsections[3], display_name="Test Unit B 2 a "),
+            self.make_block("vertical", self.subsections[3], display_name="Test Unit B 2 b"),
         ]
 
-        self.icrv = ItemFactory.create(parent=self.verticals[0], category='edx-reverification-block')
-        self.sibling_problem = ItemFactory.create(parent=self.verticals[0], category='problem')
+        self.icrv = self.make_block("edx-reverification-block", self.verticals[0])
+        self.sibling_problem = self.make_block("problem", self.verticals[0])
 
     def test_creates_user_partitions(self):
         # Transform the course by applying ICRV access rules
-        course = self._apply_rules()
+        self._apply_rules()
 
         # Check that a new user partition was created for the ICRV block
-        self.assertEqual(len(course.user_partitions), 1)
-        partition = course.user_partitions[0]
+        self.assertEqual(len(self.course.user_partitions), 1)
+        partition = self.course.user_partitions[0]
         self.assertEqual(partition.scheme.name, "verification")
         self.assertEqual(partition.parameters["location"], unicode(self.icrv.location))
 
@@ -83,7 +83,23 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
         self.fail("TODO")
 
     def test_tags_reverification_block(self):
-        self.fail("TODO")
+        self._apply_rules()
+
+        # Check that the ICRV block's allowed groups have been updated
+        self.assertEqual(len(self.course.user_partitions), 1)
+        partition_id = self.course.user_partitions[0].id
+        self.assertIn(partition_id, self.icrv.group_access)
+
+        # Expect that verified deny and verified allow groups are set
+        # so that users who are verified can see the block.
+        groups = self.icrv.group_access[partition_id]
+        self.assertItemsEqual(
+            groups,
+            [
+                VerificationPartitionScheme.VERIFIED_DENY,
+                VerificationPartitionScheme.VERIFIED_ALLOW
+            ]
+        )
 
     def test_tags_exam_content(self):
         self.fail("TODO")
@@ -92,6 +108,12 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
         self.fail("TODO")
 
     def test_removes_old_tags_from_exam_content(self):
+        self.fail("TODO")
+
+    def test_applying_rules_preserves_has_changes(self):
+        self.fail("TODO")
+
+    def test_applying_rules_does_not_introduce_changes(self):
         self.fail("TODO")
 
     def test_query_counts_with_no_reverification_blocks(self):
@@ -106,4 +128,12 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
     def _apply_rules(self):
         """TODO """
         apply_verification_access_rules(self.course.id)
-        return modulestore().get_course(self.course.id)
+
+        # Reload the published version of each component to get changes
+        with self.store.branch_setting(ModuleStoreEnum.Branch.published_only):
+            self.course = self.store.get_course(self.course.id)
+            self.sections = [self.store.get_item(section.location) for section in self.sections]
+            self.subsections = [self.store.get_item(subsection.location) for subsection in self.subsections]
+            self.verticals = [self.store.get_item(vertical.location) for vertical in self.verticals]
+            self.icrv = self.store.get_item(self.icrv.location)
+            self.sibling_problem = self.store.get_item(self.sibling_problem.location)

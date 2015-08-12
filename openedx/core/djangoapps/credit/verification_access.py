@@ -77,21 +77,28 @@ def apply_verification_access_rules(course_key):
         # Update the verification definitions in the course descriptor
         # This will also clean out old verification partitions if checkpoints
         # have been deleted.
-        _set_verification_partitions(course, icrv_blocks)
+        partitions = _set_verification_partitions(course, icrv_blocks)
+
+        # Index partitions by their associated reverification block location
+        partitions_by_loc = {
+            p.parameters["location"]: p
+            for p in partitions
+        }
 
         # Update the allowed partition groups for the in-course-reverification block
         # and its surrounding exam content.
         for block in icrv_blocks:
-            _tag_icrv_block_and_exam(block)
+            _tag_icrv_block_and_exam(block, partitions_by_loc)
 
 
 def _unique_partition_id(course):
+    """TODO """
     used_ids = set(p.id for p in course.user_partitions)
     return generate_int_id(used_ids=used_ids)
 
 
 def _set_verification_partitions(course, icrv_blocks):
-
+    """TODO """
     scheme = UserPartition.get_scheme(VERIFICATION_SCHEME_NAME)
     if scheme is None:
         # TODO -- log an error here
@@ -115,7 +122,26 @@ def _set_verification_partitions(course, icrv_blocks):
 
     course.user_partitions = partitions
     modulestore().update_item(course, ModuleStoreEnum.UserID.system)
+    return partitions
 
 
-def _tag_icrv_block_and_exam(icrv_block):
-    pass
+def _tag_icrv_block_and_exam(icrv_block, partitions_by_loc):
+    """TODO """
+
+    # Set the groups for the reverification block
+    # TODO: play nicely with existing groups
+    partition = partitions_by_loc.get(unicode(icrv_block.location))
+    if partition is None:
+        # This should never happen, but be defensive
+        # TODO log
+        return
+
+    icrv_block.group_access = {
+        partition.id: [
+            partition.scheme.VERIFIED_ALLOW,
+            partition.scheme.VERIFIED_DENY,
+        ]
+    }
+
+    with modulestore().branch_setting(ModuleStoreEnum.Branch.published_only):
+        modulestore().update_item(icrv_block, ModuleStoreEnum.UserID.system)
