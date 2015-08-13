@@ -2,10 +2,9 @@
 TODO
 """
 from xmodule.modulestore.django import modulestore
-from xmodule.modulestore import ModuleStoreEnum
 
 
-def get_course_blocks(course_key, category):
+def get_course_blocks(course_key, category, revision=None):
     """
     Retrieve all XBlocks in the course for a particular category.
 
@@ -15,7 +14,7 @@ def get_course_blocks(course_key, category):
         block for block in modulestore().get_items(
             course_key,
             qualifiers={"category": category},
-            revision=ModuleStoreEnum.RevisionOption.published_only,
+            revision=revision,
         )
         if _is_in_course_tree(block)
     ]

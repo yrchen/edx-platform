@@ -16,6 +16,7 @@ from .api import set_credit_requirements
 from openedx.core.djangoapps.credit.exceptions import InvalidCreditRequirements
 from openedx.core.djangoapps.credit.models import CreditCourse
 from openedx.core.djangoapps.credit.utils import get_course_blocks
+from xmodule.modulestore import ModuleStoreEnum
 from xmodule.modulestore.django import modulestore
 from xmodule.modulestore.exceptions import ItemNotFoundError
 
@@ -145,7 +146,7 @@ def _get_xblocks(course_key, category):
 
     Returns only XBlocks that are published and haven't been deleted.
     """
-    xblocks = get_course_blocks(course_key, category)
+    xblocks = get_course_blocks(course_key, category, revision=ModuleStoreEnum.RevisionOption.published_only)
 
     # Secondary sort on credit requirement name
     xblocks = sorted(xblocks, key=lambda block: block.get_credit_requirement_display_name())

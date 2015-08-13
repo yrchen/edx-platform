@@ -198,24 +198,6 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
     def test_removes_deleted_tags_from_exam_content(self):
         self.fail("TODO")
 
-    def test_applying_rules_preserves_has_changes(self):
-        # Since we haven't changed the draft since publishing,
-        # applying the rules should not introduce any changes
-        self.assertFalse(self.store.has_changes(self.icrv))
-        self._apply_rules()
-        self.assertFalse(self.store.has_changes(self.icrv))
-
-        # Update the ICRV block's draft version, then apply access rules
-        self.icrv.display_name = "Foobar"
-        self.store.update_item(self.icrv, ModuleStoreEnum.UserID.test)
-
-        # Expect that changes are preserved
-        self.assertTrue(self.store.has_changes(self.icrv))
-        self._apply_rules()
-        self.assertTrue(self.store.has_changes(self.icrv))
-
-        # TODO -- expect that the draft version still says "Foobar"
-
     def test_multiple_reverification_blocks(self):
         self.fail("TODO")
 
@@ -232,14 +214,13 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
         """TODO """
         apply_verification_access_rules(self.course.id)
 
-        # Reload the published version of each component to get changes
-        with self.store.branch_setting(ModuleStoreEnum.Branch.published_only):
-            self.course = self.store.get_course(self.course.id)
-            self.sections = [self._reload_item(section.location) for section in self.sections]
-            self.subsections = [self._reload_item(subsection.location) for subsection in self.subsections]
-            self.verticals = [self._reload_item(vertical.location) for vertical in self.verticals]
-            self.icrv = self._reload_item(self.icrv.location)
-            self.sibling_problem = self._reload_item(self.sibling_problem.location)
+        # Reload each component to get changes
+        self.course = self.store.get_course(self.course.id)
+        self.sections = [self._reload_item(section.location) for section in self.sections]
+        self.subsections = [self._reload_item(subsection.location) for subsection in self.subsections]
+        self.verticals = [self._reload_item(vertical.location) for vertical in self.verticals]
+        self.icrv = self._reload_item(self.icrv.location)
+        self.sibling_problem = self._reload_item(self.sibling_problem.location)
 
     def _reload_item(self, location):
         """TODO """
@@ -296,7 +277,7 @@ class WriteOnPublishTest(ModuleStoreTestCase):
         CreditCourse.objects.create(course_key=self.course.id, enabled=True)
 
     @patch.dict(settings.FEATURES, {"ENABLE_COURSEWARE_INDEX": False})
-    def test_can_write_on_publish_signal(self):
+    def test_can_write_on_publish(self):
         # Sanity check -- initially user partitions should be empty
         self.assertEqual(self.course.user_partitions, [])
         self.assertEqual(self.icrv.group_access, {})
@@ -311,8 +292,7 @@ class WriteOnPublishTest(ModuleStoreTestCase):
         # Since the course is marked as credit, the in-course verification access
         # rules should have been applied.
         # We need to verify that these changes were actually persisted to the modulestore.
-        with self.store.branch_setting(ModuleStoreEnum.Branch.published_only):
-            retrieved_course = self.store.get_course(self.course.id)
-            self.assertEqual(len(retrieved_course.user_partitions), 1)
-            retrieved_icrv = self.store.get_item(self.icrv.location)
-            self.assertEqual(len(retrieved_icrv.group_access), 1)
+        retrieved_course = self.store.get_course(self.course.id)
+        self.assertEqual(len(retrieved_course.user_partitions), 1)
+        retrieved_icrv = self.store.get_item(self.icrv.location)
+        self.assertEqual(len(retrieved_icrv.group_access), 1)

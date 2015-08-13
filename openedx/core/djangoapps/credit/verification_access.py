@@ -141,14 +141,13 @@ def _set_verification_partitions(course_key, icrv_blocks):
 
     # Preserve existing, non-verified partitions from the course
     course.user_partitions = partitions + _find_other_partitions(course, scheme)
-    _update_published_item(course)
+    modulestore().update_item(course, ModuleStoreEnum.UserID.system)
 
     return partitions
 
 
 def _tag_icrv_block_and_exam(icrv_block, partitions_by_loc):
     """TODO """
-
     # Set the groups for the reverification block
     # TODO: play nicely with existing groups
     partition = partitions_by_loc.get(unicode(icrv_block.location))
@@ -165,7 +164,7 @@ def _tag_icrv_block_and_exam(icrv_block, partitions_by_loc):
             partition.scheme.VERIFIED_DENY,
         ]
     }
-    icrv_block = _update_published_item(icrv_block)
+    icrv_block = modulestore().update_item(icrv_block, ModuleStoreEnum.UserID.system)
 
     # Update the exam content associated with the reverification block
     # TODO: lots of explanation here
@@ -176,11 +175,4 @@ def _tag_icrv_block_and_exam(icrv_block, partitions_by_loc):
                 partition.scheme.VERIFIED_ALLOW,
             ]
         }
-        _update_published_item(block)
-
-
-def _update_published_item(item):
-    """TODO """
-    store = modulestore()
-    with store.branch_setting(ModuleStoreEnum.Branch.published_only, course_id=item.location.course_key):
-        return store.update_item(item, ModuleStoreEnum.UserID.system)
+        modulestore().update_item(block, ModuleStoreEnum.UserID.system)
