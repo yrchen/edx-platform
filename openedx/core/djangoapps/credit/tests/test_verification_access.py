@@ -108,6 +108,7 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
         # Check that the user partition was removed from the course
         self.assertEqual(self.course.user_partitions, [])
 
+    @patch.dict(settings.FEATURES, {"ENABLE_COURSEWARE_INDEX": False})
     def test_preserves_existing_user_partitions(self):
         # Add other, non-verified partition to the course
         self.course.user_partitions = [
@@ -142,6 +143,7 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
         self.assertIn(0, partition_ids)
         self.assertIn(1, partition_ids)
 
+    @patch.dict(settings.FEATURES, {"ENABLE_COURSEWARE_INDEX": False})
     def test_tags_reverification_block(self):
         self._apply_rules()
 
@@ -161,6 +163,7 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
             ]
         )
 
+    @patch.dict(settings.FEATURES, {"ENABLE_COURSEWARE_INDEX": False})
     def test_tags_exam_content(self):
         self._apply_rules()
 
@@ -196,10 +199,22 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
         self.fail("TODO")
 
     def test_applying_rules_preserves_has_changes(self):
-        self.fail("TODO")
+        # Since we haven't changed the draft since publishing,
+        # applying the rules should not introduce any changes
+        self.assertFalse(self.store.has_changes(self.icrv))
+        self._apply_rules()
+        self.assertFalse(self.store.has_changes(self.icrv))
 
-    def test_applying_rules_does_not_introduce_changes(self):
-        self.fail("TODO")
+        # Update the ICRV block's draft version, then apply access rules
+        self.icrv.display_name = "Foobar"
+        self.store.update_item(self.icrv, ModuleStoreEnum.UserID.test)
+
+        # Expect that changes are preserved
+        self.assertTrue(self.store.has_changes(self.icrv))
+        self._apply_rules()
+        self.assertTrue(self.store.has_changes(self.icrv))
+
+        # TODO -- expect that the draft version still says "Foobar"
 
     def test_multiple_reverification_blocks(self):
         self.fail("TODO")
