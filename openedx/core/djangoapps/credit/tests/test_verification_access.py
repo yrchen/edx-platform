@@ -11,6 +11,10 @@ into verify_student.
 
 """
 
+from mock import patch
+
+from django.conf import settings
+
 from openedx.core.djangoapps.credit.models import CreditCourse
 from openedx.core.djangoapps.credit.partition_schemes import VerificationPartitionScheme
 from openedx.core.djangoapps.credit.verification_access import apply_verification_access_rules
@@ -27,6 +31,7 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
     # TODO: explain this
     MODULESTORE = TEST_DATA_SPLIT_MODULESTORE
 
+    @patch.dict(settings.FEATURES, {"ENABLE_COURSEWARE_INDEX": False})
     def setUp(self):
         super(VerificationAccessRuleTest, self).setUp()
 
@@ -149,6 +154,7 @@ class WriteOnPublishTest(ModuleStoreTestCase):
     """
     MODULESTORE = TEST_DATA_SPLIT_MODULESTORE
 
+    @patch.dict(settings.FEATURES, {"ENABLE_COURSEWARE_INDEX": False})
     def setUp(self):
         super(WriteOnPublishTest, self).setUp()
 
@@ -162,6 +168,7 @@ class WriteOnPublishTest(ModuleStoreTestCase):
         # Mark the course as credit
         CreditCourse.objects.create(course_key=self.course.id, enabled=True)
 
+    @patch.dict(settings.FEATURES, {"ENABLE_COURSEWARE_INDEX": False})
     def test_can_write_on_publish_signal(self):
         # Sanity check -- initially user partitions should be empty
         self.assertEqual(self.course.user_partitions, [])

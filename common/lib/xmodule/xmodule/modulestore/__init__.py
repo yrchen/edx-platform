@@ -278,9 +278,6 @@ class BulkOperationsMixin(object):
 
         dirty = self._end_outermost_bulk_operation(bulk_ops_record, structure_key)
 
-        # DEBUG
-        print "DEBUG: BULK OPERATION DIRTY = {}".format(dirty)
-
         # The bulk op has ended. However, the signal tasks below still need to use the
         # built-up bulk op information (if the signals trigger tasks in the same thread).
         # So re-nest until the signals are sent.

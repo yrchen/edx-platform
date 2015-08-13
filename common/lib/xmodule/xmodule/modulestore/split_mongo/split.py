@@ -235,7 +235,6 @@ class SplitBulkWriteMixin(BulkOperationsMixin):
         """
         End the active bulk write operation on structure_key (course or library key).
         """
-
         dirty = False
 
         # If the content is dirty, then update the database
