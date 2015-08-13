@@ -70,6 +70,8 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
         self.icrv = ItemFactory.create(parent=self.verticals[0], category='edx-reverification-block')
         self.sibling_problem = ItemFactory.create(parent=self.verticals[0], category='problem')
 
+
+
     def test_creates_user_partitions(self):
         # Transform the course by applying ICRV access rules
         self._apply_rules()
@@ -161,7 +163,24 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
         )
 
     def test_tags_exam_content(self):
-        self.fail("TODO")
+        self._apply_rules()
+
+        # Check that the correct "exam" content has been tagged
+        partition_id = self.course.user_partitions[0].id
+        for block in self.exam_content:
+            self.assertIn(partition_id, block.group_access)
+            groups = block.group_access[partition_id]
+            self.assertItemsEqual(
+                groups,
+                [
+                    VerificationPartitionScheme.NON_VERIFIED,
+                    VerificationPartitionScheme.VERIFIED_ALLOW,
+                ]
+            )
+
+        # Check that non-exam content has NOT been tagged.
+        for block in self.non_exam_content:
+            self.assertEqual(block.icrv.group_access, {})
 
     def test_removes_deleted_tags_from_reverification_block(self):
         self.fail("TODO")
@@ -206,6 +225,34 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
             return self.store.get_item(location)
         except ItemNotFoundError:
             return None
+
+    @property
+    def exam_content(self):
+        """TODO """
+        # "Exam" content doesn't really exist in the course tree, except as assessment
+        # content within a sequential.  We use some simple heuristics to tag this content.
+        return [
+
+            # The sibling vertical is included,
+            # but not the parent vertical, since access rules are inherited and
+            # we need to see the ICRV block.
+            self.verticals[1],
+
+            # The sibling assessment within the ICRV's vertical
+            self.sibling_problem,
+        ]
+
+    @property
+    def non_exam_content(self):
+        """TODO """
+        # Everything else is non-exam content, including the ICRV block itself
+        return [
+            self.sections[0], self.sections[1],
+            self.subsections[0], self.subsections[1], self.subsections[2], self.subsections[3],
+            self.verticals[0], self.verticals[2], self.verticals[3], self.verticals[4],
+            self.verticals[5], self.verticals[6], self.verticals[7],
+            self.icrv,
+        ]
 
 
 class WriteOnPublishTest(ModuleStoreTestCase):
