@@ -184,7 +184,8 @@ class WriteOnPublishTest(ModuleStoreTestCase):
         # Since the course is marked as credit, the in-course verification access
         # rules should have been applied.
         # We need to verify that these changes were actually persisted to the modulestore.
-        retrieved_course = self.store.get_course(self.course.id)
-        self.assertEqual(len(retrieved_course.user_partitions), 1)
-        retrieved_icrv = self.store.get_item(self.icrv.location)
-        self.assertEqual(len(retrieved_icrv.group_access), 1)
+        with self.store.branch_setting(ModuleStoreEnum.Branch.published_only):
+            retrieved_course = self.store.get_course(self.course.id)
+            self.assertEqual(len(retrieved_course.user_partitions), 1)
+            retrieved_icrv = self.store.get_item(self.icrv.location)
+            self.assertEqual(len(retrieved_icrv.group_access), 1)
