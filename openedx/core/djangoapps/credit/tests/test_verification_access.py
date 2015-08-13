@@ -48,29 +48,8 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
         # we need to create a fairly large course structure, with multiple sections,
         # subsections, verticals, units, and items.
         self.course = CourseFactory()
-        self.sections = [
-            ItemFactory.create(parent=self.course, category='chapter', display_name='Test Section A'),
-            ItemFactory.create(parent=self.course, category='chapter', display_name='Test Section B'),
-        ]
-        self.subsections = [
-            ItemFactory.create(parent=self.sections[0], category='sequential', display_name='Test Subsection A 1'),
-            ItemFactory.create(parent=self.sections[0], category='sequential', display_name='Test Subsection A 2'),
-            ItemFactory.create(parent=self.sections[1], category='sequential', display_name='Test Subsection B 1'),
-            ItemFactory.create(parent=self.sections[1], category='sequential', display_name='Test Subsection B 2'),
-        ]
-        self.verticals = [
-            ItemFactory.create(parent=self.subsections[0], category='vertical', display_name='Test Unit A 1 a'),
-            ItemFactory.create(parent=self.subsections[0], category='vertical', display_name='Test Unit A 1 b'),
-            ItemFactory.create(parent=self.subsections[1], category='vertical', display_name='Test Unit A 2 a'),
-            ItemFactory.create(parent=self.subsections[1], category='vertical', display_name='Test Unit A 2 b'),
-            ItemFactory.create(parent=self.subsections[2], category='vertical', display_name='Test Unit B 1 a'),
-            ItemFactory.create(parent=self.subsections[2], category='vertical', display_name='Test Unit B 1 b'),
-            ItemFactory.create(parent=self.subsections[3], category='vertical', display_name='Test Unit B 2 a'),
-            ItemFactory.create(parent=self.subsections[3], category='vertical', display_name='Test Unit B 2 b'),
-        ]
-        self.icrv = ItemFactory.create(parent=self.verticals[0], category='edx-reverification-block')
-        self.sibling_problem = ItemFactory.create(parent=self.verticals[0], category='problem')
 
+    @patch.dict(settings.FEATURES, {"ENABLE_COURSEWARE_INDEX": False})
     def test_creates_user_partitions(self):
         # Transform the course by applying ICRV access rules
         self._apply_rules()
@@ -143,61 +122,6 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
         self.assertIn(0, partition_ids)
         self.assertIn(1, partition_ids)
 
-    @patch.dict(settings.FEATURES, {"ENABLE_COURSEWARE_INDEX": False})
-    def test_tags_reverification_block(self):
-        self._apply_rules()
-
-        # Check that the ICRV block's allowed groups have been updated
-        self.assertEqual(len(self.course.user_partitions), 1)
-        partition_id = self.course.user_partitions[0].id
-        self.assertIn(partition_id, self.icrv.group_access)
-
-        # Expect that verified deny and verified allow groups are set
-        # so that users who are verified can see the block.
-        groups = self.icrv.group_access[partition_id]
-        self.assertItemsEqual(
-            groups,
-            [
-                VerificationPartitionScheme.VERIFIED_DENY,
-                VerificationPartitionScheme.VERIFIED_ALLOW
-            ]
-        )
-
-    @patch.dict(settings.FEATURES, {"ENABLE_COURSEWARE_INDEX": False})
-    def test_tags_exam_content(self):
-        self._apply_rules()
-
-        # Check that the correct "exam" content has been tagged
-        partition_id = self.course.user_partitions[0].id
-        for block in self.exam_content:
-            self.assertIn(partition_id, block.group_access)
-            groups = block.group_access[partition_id]
-            self.assertItemsEqual(
-                groups,
-                [
-                    VerificationPartitionScheme.NON_VERIFIED,
-                    VerificationPartitionScheme.VERIFIED_ALLOW,
-                ]
-            )
-
-        # Check that non-exam content has NOT been tagged.
-        for block in self.non_exam_content:
-            self.assertEqual(
-                block.group_access, {},
-                msg="Expected block {} to not be tagged".format(block.display_name)
-            )
-
-    def test_preserves_existing_tags_in_exam_content(self):
-        self._apply_rules()
-        self.fail("TODO")
-
-    def test_removes_deleted_tags_from_reverification_block(self):
-        self._apply_rules()
-        self.fail("TODO")
-
-    def test_removes_deleted_tags_from_exam_content(self):
-        self.fail("TODO")
-
     def test_multiple_reverification_blocks(self):
         self.fail("TODO")
 
@@ -229,32 +153,6 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
         except ItemNotFoundError:
             return None
 
-    @property
-    def exam_content(self):
-        """TODO """
-        # "Exam" content doesn't really exist in the course tree, except as assessment
-        # content within a sequential.  We use some simple heuristics to tag this content.
-        return [
-
-            # The sibling vertical is included,
-            # but not the parent vertical, since access rules are inherited and
-            # we need to see the ICRV block.
-            self.verticals[1],
-
-            # The sibling assessment within the ICRV's vertical
-            self.sibling_problem,
-        ]
-
-    @property
-    def non_exam_content(self):
-        """TODO """
-        return [
-            self.sections[0], self.sections[1],
-            self.subsections[0], self.subsections[1], self.subsections[2], self.subsections[3],
-            self.verticals[0], self.verticals[2], self.verticals[3], self.verticals[4],
-            self.verticals[5], self.verticals[6], self.verticals[7],
-        ]
-
 
 class WriteOnPublishTest(ModuleStoreTestCase):
     """
@@ -280,7 +178,6 @@ class WriteOnPublishTest(ModuleStoreTestCase):
     def test_can_write_on_publish(self):
         # Sanity check -- initially user partitions should be empty
         self.assertEqual(self.course.user_partitions, [])
-        self.assertEqual(self.icrv.group_access, {})
 
         # Make and publish a change to a block, which should trigger the publish signal
         with self.store.bulk_operations(self.course.id):
@@ -294,5 +191,3 @@ class WriteOnPublishTest(ModuleStoreTestCase):
         # We need to verify that these changes were actually persisted to the modulestore.
         retrieved_course = self.store.get_course(self.course.id)
         self.assertEqual(len(retrieved_course.user_partitions), 1)
-        retrieved_icrv = self.store.get_item(self.icrv.location)
-        self.assertEqual(len(retrieved_icrv.group_access), 1)
