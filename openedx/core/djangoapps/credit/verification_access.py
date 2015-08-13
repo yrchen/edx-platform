@@ -63,18 +63,7 @@ def apply_verification_access_rules(course_key):
         # Update the verification definitions in the course descriptor
         # This will also clean out old verification partitions if checkpoints
         # have been deleted.
-        partitions = _set_verification_partitions(course_key, icrv_blocks)
-
-        # Index partitions by their associated reverification block location
-        partitions_by_loc = {
-            p.parameters["location"]: p
-            for p in partitions
-        }
-
-        # Update the allowed partition groups for the in-course-reverification block
-        # and its surrounding exam content.
-        for block in icrv_blocks:
-            _tag_icrv_block_and_exam(block, partitions_by_loc)
+        _set_verification_partitions(course_key, icrv_blocks)
 
 
 def _unique_partition_id(course):
@@ -89,26 +78,6 @@ def _find_other_partitions(course, scheme):
         p for p in course.user_partitions
         if p.scheme != scheme
     ]
-
-
-def _get_exam_blocks(icrv_block):
-    """TODO """
-    blocks = []
-    parent = icrv_block.get_parent()
-    if parent is not None and parent.location.category == "vertical":
-
-        # Sibling assessments of the reverification block
-        blocks += [b for b in parent.get_children() if b.location != icrv_block.location]
-
-        grandparent = parent.get_parent()
-        if grandparent is not None and grandparent.location.category == "sequential":
-            # Sibling verticals of the grandparent sequential
-            blocks += [
-                b for b in grandparent.get_children()
-                if b.location != parent.location and b.location.category == "vertical"
-            ]
-
-    return blocks
 
 
 def _set_verification_partitions(course_key, icrv_blocks):
@@ -144,35 +113,3 @@ def _set_verification_partitions(course_key, icrv_blocks):
     modulestore().update_item(course, ModuleStoreEnum.UserID.system)
 
     return partitions
-
-
-def _tag_icrv_block_and_exam(icrv_block, partitions_by_loc):
-    """TODO """
-    # Set the groups for the reverification block
-    # TODO: play nicely with existing groups
-    partition = partitions_by_loc.get(unicode(icrv_block.location))
-    if partition is None:
-        # This should never happen, but be defensive
-        # TODO log
-        return
-
-    # Update the in-course reverification block itself
-    # TODO: explain why these two groups are used
-    icrv_block.group_access = {
-        partition.id: [
-            partition.scheme.VERIFIED_ALLOW,
-            partition.scheme.VERIFIED_DENY,
-        ]
-    }
-    icrv_block = modulestore().update_item(icrv_block, ModuleStoreEnum.UserID.system)
-
-    # Update the exam content associated with the reverification block
-    # TODO: lots of explanation here
-    for block in _get_exam_blocks(icrv_block):
-        block.group_access = {
-            partition.id: [
-                partition.scheme.NON_VERIFIED,
-                partition.scheme.VERIFIED_ALLOW,
-            ]
-        }
-        modulestore().update_item(block, ModuleStoreEnum.UserID.system)
