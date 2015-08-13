@@ -172,6 +172,7 @@ class WriteOnPublishTest(ModuleStoreTestCase):
     def test_can_write_on_publish_signal(self):
         # Sanity check -- initially user partitions should be empty
         self.assertEqual(self.course.user_partitions, [])
+        self.assertEqual(self.icrv.group_access, {})
 
         # Make and publish a change to a block, which should trigger the publish signal
         with self.store.bulk_operations(self.course.id):
@@ -185,3 +186,5 @@ class WriteOnPublishTest(ModuleStoreTestCase):
         # We need to verify that these changes were actually persisted to the modulestore.
         retrieved_course = self.store.get_course(self.course.id)
         self.assertEqual(len(retrieved_course.user_partitions), 1)
+        retrieved_icrv = self.store.get_item(self.icrv.location)
+        self.assertEqual(len(retrieved_icrv.group_access), 1)
