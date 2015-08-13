@@ -276,6 +276,9 @@ class BulkOperationsMixin(object):
         if bulk_ops_record.active:
             return
 
+        if emit_signals:
+            self.send_pre_publish_signal(bulk_ops_record, structure_key)
+
         dirty = self._end_outermost_bulk_operation(bulk_ops_record, structure_key)
 
         # The bulk op has ended. However, the signal tasks below still need to use the
@@ -297,6 +300,11 @@ class BulkOperationsMixin(object):
         Return whether a bulk operation is active on `course_key`.
         """
         return self._get_bulk_ops_record(course_key, ignore_case).active
+
+    def send_pre_publish_signal(self, bulk_ops_record, course_id):
+        signal_handler = getattr(self, "signal_handler", None)
+        if signal_handler and bulk_ops_record.has_publish_item:
+            signal_handler.send("pre_publish", course_key=course_id)
 
     def send_bulk_published_signal(self, bulk_ops_record, course_id):
         """
