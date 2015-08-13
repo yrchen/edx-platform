@@ -163,10 +163,10 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
     def test_tags_exam_content(self):
         self.fail("TODO")
 
-    def test_removes_old_tags_from_reverification_block(self):
+    def test_removes_deleted_tags_from_reverification_block(self):
         self.fail("TODO")
 
-    def test_removes_old_tags_from_exam_content(self):
+    def test_removes_deleted_tags_from_exam_content(self):
         self.fail("TODO")
 
     def test_applying_rules_preserves_has_changes(self):
