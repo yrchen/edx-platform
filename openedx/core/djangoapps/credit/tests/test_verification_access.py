@@ -18,7 +18,10 @@ from django.conf import settings
 from openedx.core.djangoapps.credit.models import CreditCourse
 from openedx.core.djangoapps.credit.partition_schemes import VerificationPartitionScheme
 from openedx.core.djangoapps.credit.verification_access import apply_verification_access_rules
+from openedx.core.djangoapps.credit.signals import on_pre_publish
 from xmodule.modulestore import ModuleStoreEnum
+from xmodule.modulestore.django import SignalHandler
+from xmodule.modulestore.exceptions import ItemNotFoundError
 from xmodule.modulestore.tests.django_utils import ModuleStoreTestCase, TEST_DATA_SPLIT_MODULESTORE
 from xmodule.modulestore.tests.factories import CourseFactory, ItemFactory, check_mongo_calls_range
 
@@ -34,6 +37,9 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
     @patch.dict(settings.FEATURES, {"ENABLE_COURSEWARE_INDEX": False})
     def setUp(self):
         super(VerificationAccessRuleTest, self).setUp()
+
+        # Disconnect the signal receiver -- we'll invoke the update code ourselves
+        SignalHandler.pre_publish.disconnect(receiver=on_pre_publish)
 
         # Create a dummy course with a single verification checkpoint
         # Because we need to check "exam" content surrounding the ICRV checkpoint,
@@ -60,7 +66,6 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
             ItemFactory.create(parent=self.subsections[3], category='vertical', display_name='Test Unit B 2 a'),
             ItemFactory.create(parent=self.subsections[3], category='vertical', display_name='Test Unit B 2 b'),
         ]
-
         self.icrv = ItemFactory.create(parent=self.verticals[0], category='edx-reverification-block')
         self.sibling_problem = ItemFactory.create(parent=self.verticals[0], category='problem')
 
@@ -85,8 +90,21 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
             ]
         )
 
+    @patch.dict(settings.FEATURES, {"ENABLE_COURSEWARE_INDEX": False})
     def test_removes_old_user_partitions(self):
-        self.fail("TODO")
+        # Apply the rules to create the user partition for the checkpoint
+        self._apply_rules()
+
+        # Delete the reverification block, then update the access rules
+        self.store.delete_item(
+            self.icrv.location,
+            ModuleStoreEnum.UserID.test,
+            revision=ModuleStoreEnum.RevisionOption.published_only,
+        )
+        self._apply_rules()
+
+        # Check that the user partition was removed from the course
+        self.assertEqual(self.course.user_partitions, [])
 
     def test_preserves_existing_user_partitions(self):
         self.fail("TODO")
@@ -125,6 +143,9 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
     def test_applying_rules_does_not_introduce_changes(self):
         self.fail("TODO")
 
+    def test_multiple_reverification_blocks(self):
+        self.fail("TODO")
+
     def test_query_counts_with_no_reverification_blocks(self):
         self.fail("TODO")
 
@@ -141,16 +162,23 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
         # Reload the published version of each component to get changes
         with self.store.branch_setting(ModuleStoreEnum.Branch.published_only):
             self.course = self.store.get_course(self.course.id)
-            self.sections = [self.store.get_item(section.location) for section in self.sections]
-            self.subsections = [self.store.get_item(subsection.location) for subsection in self.subsections]
-            self.verticals = [self.store.get_item(vertical.location) for vertical in self.verticals]
-            self.icrv = self.store.get_item(self.icrv.location)
-            self.sibling_problem = self.store.get_item(self.sibling_problem.location)
+            self.sections = [self._reload_item(section.location) for section in self.sections]
+            self.subsections = [self._reload_item(subsection.location) for subsection in self.subsections]
+            self.verticals = [self._reload_item(vertical.location) for vertical in self.verticals]
+            self.icrv = self._reload_item(self.icrv.location)
+            self.sibling_problem = self._reload_item(self.sibling_problem.location)
+
+    def _reload_item(self, location):
+        """TODO """
+        try:
+            return self.store.get_item(location)
+        except ItemNotFoundError:
+            return None
 
 
 class WriteOnPublishTest(ModuleStoreTestCase):
     """
-    TODO -- explain why this test is necessary.
+    Verify that changes are written automatically on publish.
     """
     MODULESTORE = TEST_DATA_SPLIT_MODULESTORE
 
@@ -180,7 +208,7 @@ class WriteOnPublishTest(ModuleStoreTestCase):
             self.store.update_item(self.icrv, ModuleStoreEnum.UserID.test)
             self.store.publish(self.icrv.location, ModuleStoreEnum.UserID.test)
 
-        # Within the test, the course publish signal should have fired synchronously
+        # Within the test, the course pre-publish signal should have fired synchronously
         # Since the course is marked as credit, the in-course verification access
         # rules should have been applied.
         # We need to verify that these changes were actually persisted to the modulestore.

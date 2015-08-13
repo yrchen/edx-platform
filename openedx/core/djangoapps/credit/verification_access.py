@@ -53,21 +53,8 @@ def apply_verification_access_rules(course_key):
     """
     TODO
     """
-    # DEBUG
-    print "DEBUG: starting to apply verification access rules!"
-
     # Retrieve all in-course reverification blocks in the course
-    # Hopefully, there won't be any, so we can exit without doing
-    # any additional work.
     icrv_blocks = get_course_blocks(course_key, VERIFICATION_BLOCK_CATEGORY)
-
-    if not icrv_blocks:
-        return
-
-    course = modulestore().get_course(course_key)
-    if course is None:
-        # TODO: log an error here
-        return
 
     # Batch all the write queries we're about to do and suppress
     # the "publish" signal to avoid an infinite call loop.
@@ -76,7 +63,7 @@ def apply_verification_access_rules(course_key):
         # Update the verification definitions in the course descriptor
         # This will also clean out old verification partitions if checkpoints
         # have been deleted.
-        partitions = _set_verification_partitions(course, icrv_blocks)
+        partitions = _set_verification_partitions(course_key, icrv_blocks)
 
         # Index partitions by their associated reverification block location
         partitions_by_loc = {
@@ -89,9 +76,6 @@ def apply_verification_access_rules(course_key):
         for block in icrv_blocks:
             _tag_icrv_block_and_exam(block, partitions_by_loc)
 
-    # DEBUG
-    print "DEBUG: finished applying verification access rules"
-
 
 def _unique_partition_id(course):
     """TODO """
@@ -99,12 +83,17 @@ def _unique_partition_id(course):
     return generate_int_id(used_ids=used_ids)
 
 
-def _set_verification_partitions(course, icrv_blocks):
+def _set_verification_partitions(course_key, icrv_blocks):
     """TODO """
     scheme = UserPartition.get_scheme(VERIFICATION_SCHEME_NAME)
     if scheme is None:
         # TODO -- log an error here
-        return
+        return []
+
+    course = modulestore().get_course(course_key)
+    if course is None:
+        # TODO: log an error here
+        return []
 
     partitions = [
         UserPartition(
