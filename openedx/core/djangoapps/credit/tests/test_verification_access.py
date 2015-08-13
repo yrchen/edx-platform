@@ -48,8 +48,29 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
         # we need to create a fairly large course structure, with multiple sections,
         # subsections, verticals, units, and items.
         self.course = CourseFactory()
+        self.sections = [
+            ItemFactory.create(parent=self.course, category='chapter', display_name='Test Section A'),
+            ItemFactory.create(parent=self.course, category='chapter', display_name='Test Section B'),
+        ]
+        self.subsections = [
+            ItemFactory.create(parent=self.sections[0], category='sequential', display_name='Test Subsection A 1'),
+            ItemFactory.create(parent=self.sections[0], category='sequential', display_name='Test Subsection A 2'),
+            ItemFactory.create(parent=self.sections[1], category='sequential', display_name='Test Subsection B 1'),
+            ItemFactory.create(parent=self.sections[1], category='sequential', display_name='Test Subsection B 2'),
+        ]
+        self.verticals = [
+            ItemFactory.create(parent=self.subsections[0], category='vertical', display_name='Test Unit A 1 a'),
+            ItemFactory.create(parent=self.subsections[0], category='vertical', display_name='Test Unit A 1 b'),
+            ItemFactory.create(parent=self.subsections[1], category='vertical', display_name='Test Unit A 2 a'),
+            ItemFactory.create(parent=self.subsections[1], category='vertical', display_name='Test Unit A 2 b'),
+            ItemFactory.create(parent=self.subsections[2], category='vertical', display_name='Test Unit B 1 a'),
+            ItemFactory.create(parent=self.subsections[2], category='vertical', display_name='Test Unit B 1 b'),
+            ItemFactory.create(parent=self.subsections[3], category='vertical', display_name='Test Unit B 2 a'),
+            ItemFactory.create(parent=self.subsections[3], category='vertical', display_name='Test Unit B 2 b'),
+        ]
+        self.icrv = ItemFactory.create(parent=self.verticals[0], category='edx-reverification-block')
+        self.sibling_problem = ItemFactory.create(parent=self.verticals[0], category='problem')
 
-    @patch.dict(settings.FEATURES, {"ENABLE_COURSEWARE_INDEX": False})
     def test_creates_user_partitions(self):
         # Transform the course by applying ICRV access rules
         self._apply_rules()
@@ -138,7 +159,7 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
         """TODO """
         apply_verification_access_rules(self.course.id)
 
-        # Reload each component to get changes
+        # Reload the published version of each component to get changes
         self.course = self.store.get_course(self.course.id)
         self.sections = [self._reload_item(section.location) for section in self.sections]
         self.subsections = [self._reload_item(subsection.location) for subsection in self.subsections]
@@ -175,7 +196,7 @@ class WriteOnPublishTest(ModuleStoreTestCase):
         CreditCourse.objects.create(course_key=self.course.id, enabled=True)
 
     @patch.dict(settings.FEATURES, {"ENABLE_COURSEWARE_INDEX": False})
-    def test_can_write_on_publish(self):
+    def test_can_write_on_publish_signal(self):
         # Sanity check -- initially user partitions should be empty
         self.assertEqual(self.course.user_partitions, [])
 
