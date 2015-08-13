@@ -404,13 +404,6 @@ class MongoConnection(object):
         """
         with TIMER.timer("insert_structure", course_context) as tagger:
             tagger.measure("blocks", len(structure["blocks"]))
-
-            # DEBUG
-            import pprint
-            print "Structure we're sending to Mongo: {}".format(
-                pprint.pformat(structure_to_mongo(structure, course_context))
-            )
-
             self.structures.insert(structure_to_mongo(structure, course_context))
 
     def get_course_index(self, key, ignore_case=False):
