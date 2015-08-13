@@ -83,6 +83,14 @@ def _unique_partition_id(course):
     return generate_int_id(used_ids=used_ids)
 
 
+def _find_other_partitions(course, scheme):
+    """TODO """
+    return [
+        p for p in course.user_partitions
+        if p.scheme != scheme
+    ]
+
+
 def _set_verification_partitions(course_key, icrv_blocks):
     """TODO """
     scheme = UserPartition.get_scheme(VERIFICATION_SCHEME_NAME)
@@ -111,7 +119,8 @@ def _set_verification_partitions(course_key, icrv_blocks):
         for block in icrv_blocks
     ]
 
-    course.user_partitions = partitions
+    # Preserve existing, non-verified partitions from the course
+    course.user_partitions = partitions + _find_other_partitions(course, scheme)
     _update_published_item(course)
 
     return partitions

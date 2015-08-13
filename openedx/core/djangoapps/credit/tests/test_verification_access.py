@@ -24,6 +24,7 @@ from xmodule.modulestore.django import SignalHandler
 from xmodule.modulestore.exceptions import ItemNotFoundError
 from xmodule.modulestore.tests.django_utils import ModuleStoreTestCase, TEST_DATA_SPLIT_MODULESTORE
 from xmodule.modulestore.tests.factories import CourseFactory, ItemFactory, check_mongo_calls_range
+from xmodule.partitions.partitions import Group, UserPartition
 
 
 class VerificationAccessRuleTest(ModuleStoreTestCase):
@@ -91,7 +92,7 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
         )
 
     @patch.dict(settings.FEATURES, {"ENABLE_COURSEWARE_INDEX": False})
-    def test_removes_old_user_partitions(self):
+    def test_removes_deleted_user_partitions(self):
         # Apply the rules to create the user partition for the checkpoint
         self._apply_rules()
 
@@ -107,7 +108,38 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
         self.assertEqual(self.course.user_partitions, [])
 
     def test_preserves_existing_user_partitions(self):
-        self.fail("TODO")
+        # Add other, non-verified partition to the course
+        self.course.user_partitions = [
+            UserPartition(
+                id=0,
+                name='Cohort user partition',
+                scheme=UserPartition.get_scheme('cohort'),
+                description='Cohorted user partition',
+                groups=[
+                    Group(id=0, name="Group A"),
+                    Group(id=1, name="Group B"),
+                ],
+            ),
+            UserPartition(
+                id=1,
+                name='Random user partition',
+                scheme=UserPartition.get_scheme('random'),
+                description='Random user partition',
+                groups=[
+                    Group(id=0, name="Group A"),
+                    Group(id=1, name="Group B"),
+                ],
+            ),
+        ]
+        self.course = self.store.update_item(self.course, ModuleStoreEnum.UserID.test)
+
+        # Apply the verification rules.
+        # The existing partitions should still be available
+        self._apply_rules()
+        partition_ids = [p.id for p in self.course.user_partitions]
+        self.assertEqual(len(partition_ids), 3)
+        self.assertIn(0, partition_ids)
+        self.assertIn(1, partition_ids)
 
     def test_tags_reverification_block(self):
         self._apply_rules()
