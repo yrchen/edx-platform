@@ -41,6 +41,7 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
 
         # Disconnect the signal receiver -- we'll invoke the update code ourselves
         SignalHandler.pre_publish.disconnect(receiver=on_pre_publish)
+        self.addCleanup(SignalHandler.pre_publish.connect, receiver=on_pre_publish)
 
         # Create a dummy course with a single verification checkpoint
         # Because we need to check "exam" content surrounding the ICRV checkpoint,
