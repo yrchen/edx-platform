@@ -241,9 +241,6 @@ class SplitBulkWriteMixin(BulkOperationsMixin):
         for _id in bulk_write_record.structures.viewkeys() - bulk_write_record.structures_in_db:
             dirty = True
 
-            # DEBUG
-            print "Inserting structure (id={}): {}".format(repr(_id.binary), bulk_write_record.structures[_id])
-
             try:
                 self.db_connection.insert_structure(bulk_write_record.structures[_id], bulk_write_record.course_key)
             except DuplicateKeyError:
@@ -255,9 +252,6 @@ class SplitBulkWriteMixin(BulkOperationsMixin):
         for _id in bulk_write_record.definitions.viewkeys() - bulk_write_record.definitions_in_db:
             dirty = True
 
-            # DEBUG
-            print "Inserting definition: {}".format(bulk_write_record.definitions[_id])
-
             try:
                 self.db_connection.insert_definition(bulk_write_record.definitions[_id], bulk_write_record.course_key)
             except DuplicateKeyError:
@@ -268,10 +262,6 @@ class SplitBulkWriteMixin(BulkOperationsMixin):
 
         if bulk_write_record.index is not None and bulk_write_record.index != bulk_write_record.initial_index:
             dirty = True
-
-            # DEBUG
-            print "Inserting/updating course index: {}".format(bulk_write_record.index)
-            print "New published version has ID {}".format(repr(bulk_write_record.index["versions"]["published-branch"].binary))
 
             if bulk_write_record.initial_index is None:
                 self.db_connection.insert_course_index(bulk_write_record.index, bulk_write_record.course_key)
