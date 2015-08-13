@@ -183,7 +183,12 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
                 msg="Expected block {} to not be tagged".format(block.display_name)
             )
 
+    def test_preserves_existing_tags_in_exam_content(self):
+        self._apply_rules()
+        self.fail("TODO")
+
     def test_removes_deleted_tags_from_reverification_block(self):
+        self._apply_rules()
         self.fail("TODO")
 
     def test_removes_deleted_tags_from_exam_content(self):
