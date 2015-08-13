@@ -269,17 +269,15 @@ class BulkOperationsMixin(object):
         if not bulk_ops_record.active:
             return
 
+        if emit_signals and bulk_ops_record.is_root:
+            self.send_pre_publish_signal(bulk_ops_record, structure_key)
+
         bulk_ops_record.unnest()
 
         # If this wasn't the outermost context, then don't close out the
         # bulk operation.
         if bulk_ops_record.active:
             return
-
-        if emit_signals:
-            bulk_ops_record.nest()
-            self.send_pre_publish_signal(bulk_ops_record, structure_key)
-            bulk_ops_record.unnest()
 
         dirty = self._end_outermost_bulk_operation(bulk_ops_record, structure_key)
 
