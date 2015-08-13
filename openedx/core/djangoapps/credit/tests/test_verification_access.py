@@ -70,8 +70,6 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
         self.icrv = ItemFactory.create(parent=self.verticals[0], category='edx-reverification-block')
         self.sibling_problem = ItemFactory.create(parent=self.verticals[0], category='problem')
 
-
-
     def test_creates_user_partitions(self):
         # Transform the course by applying ICRV access rules
         self._apply_rules()
@@ -180,7 +178,10 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
 
         # Check that non-exam content has NOT been tagged.
         for block in self.non_exam_content:
-            self.assertEqual(block.icrv.group_access, {})
+            self.assertEqual(
+                block.group_access, {},
+                msg="Expected block {} to not be tagged".format(block.display_name)
+            )
 
     def test_removes_deleted_tags_from_reverification_block(self):
         self.fail("TODO")
@@ -245,13 +246,11 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
     @property
     def non_exam_content(self):
         """TODO """
-        # Everything else is non-exam content, including the ICRV block itself
         return [
             self.sections[0], self.sections[1],
             self.subsections[0], self.subsections[1], self.subsections[2], self.subsections[3],
             self.verticals[0], self.verticals[2], self.verticals[3], self.verticals[4],
             self.verticals[5], self.verticals[6], self.verticals[7],
-            self.icrv,
         ]
 
 

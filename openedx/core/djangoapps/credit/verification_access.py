@@ -93,11 +93,22 @@ def _find_other_partitions(course, scheme):
 
 def _get_exam_blocks(icrv_block):
     """TODO """
-    # Sibling assessments of the parent vertical
-    # TODO
+    blocks = []
+    parent = icrv_block.get_parent()
+    if parent is not None and parent.location.category == "vertical":
 
-    # Sibling verticals of the grandparent sequential
-    return []
+        # Sibling assessments of the reverification block
+        blocks += [b for b in parent.get_children() if b.location != icrv_block.location]
+
+        grandparent = parent.get_parent()
+        if grandparent is not None and grandparent.location.category == "sequential":
+            # Sibling verticals of the grandparent sequential
+            blocks += [
+                b for b in grandparent.get_children()
+                if b.location != parent.location and b.location.category == "vertical"
+            ]
+
+    return blocks
 
 
 def _set_verification_partitions(course_key, icrv_blocks):
@@ -154,7 +165,7 @@ def _tag_icrv_block_and_exam(icrv_block, partitions_by_loc):
             partition.scheme.VERIFIED_DENY,
         ]
     }
-    _update_published_item(icrv_block)
+    icrv_block = _update_published_item(icrv_block)
 
     # Update the exam content associated with the reverification block
     # TODO: lots of explanation here
@@ -169,6 +180,7 @@ def _tag_icrv_block_and_exam(icrv_block, partitions_by_loc):
 
 
 def _update_published_item(item):
+    """TODO """
     store = modulestore()
     with store.branch_setting(ModuleStoreEnum.Branch.published_only, course_id=item.location.course_key):
-        result = store.update_item(item, ModuleStoreEnum.UserID.system)
+        return store.update_item(item, ModuleStoreEnum.UserID.system)
