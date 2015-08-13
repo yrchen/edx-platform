@@ -53,6 +53,9 @@ def apply_verification_access_rules(course_key):
     """
     TODO
     """
+    # DEBUG
+    print "DEBUG: starting to apply verification access rules!"
+
     # Retrieve all in-course reverification blocks in the course
     # Hopefully, there won't be any, so we can exit without doing
     # any additional work.
@@ -85,6 +88,9 @@ def apply_verification_access_rules(course_key):
         # and its surrounding exam content.
         for block in icrv_blocks:
             _tag_icrv_block_and_exam(block, partitions_by_loc)
+
+    # DEBUG
+    print "DEBUG: finished applying verification access rules"
 
 
 def _unique_partition_id(course):

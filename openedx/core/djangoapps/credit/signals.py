@@ -38,6 +38,7 @@ def on_course_publish(course_key):  # pylint: disable=unused-argument
         # step by the LMS, and the transformation should be owned by the verify_student app.
         # Since none of that infrastructure currently exists, we're doing it this way instead.
         apply_verification_access_rules(course_key)
+        log.info(u'Updated in-course reverification access rules')
 
 
 @receiver(GRADES_UPDATED)

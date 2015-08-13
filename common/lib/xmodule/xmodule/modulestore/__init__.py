@@ -182,9 +182,12 @@ class BulkOperationsMixin(object):
         until the bulk operation is completed.
         """
         try:
+            # DEBUG
+            print "DEBUG: STARTING BULK OPERATION"
             self._begin_bulk_operation(course_id)
             yield
         finally:
+            print "DEBUG: ENDING BULK OPERATION"
             self._end_bulk_operation(course_id, emit_signals)
 
     # the relevant type of bulk_ops_record for the mixin (overriding classes should override
@@ -274,6 +277,9 @@ class BulkOperationsMixin(object):
             return
 
         dirty = self._end_outermost_bulk_operation(bulk_ops_record, structure_key)
+
+        # DEBUG
+        print "DEBUG: BULK OPERATION DIRTY = {}".format(dirty)
 
         # The bulk op has ended. However, the signal tasks below still need to use the
         # built-up bulk op information (if the signals trigger tasks in the same thread).

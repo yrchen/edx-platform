@@ -11,6 +11,7 @@ into verify_student.
 
 """
 
+from openedx.core.djangoapps.credit.models import CreditCourse
 from openedx.core.djangoapps.credit.partition_schemes import VerificationPartitionScheme
 from openedx.core.djangoapps.credit.verification_access import apply_verification_access_rules
 from xmodule.modulestore import ModuleStoreEnum
@@ -140,3 +141,40 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
             self.verticals = [self.store.get_item(vertical.location) for vertical in self.verticals]
             self.icrv = self.store.get_item(self.icrv.location)
             self.sibling_problem = self.store.get_item(self.sibling_problem.location)
+
+
+class WriteOnPublishTest(ModuleStoreTestCase):
+    """
+    TODO -- explain why this test is necessary.
+    """
+    MODULESTORE = TEST_DATA_SPLIT_MODULESTORE
+
+    def setUp(self):
+        super(WriteOnPublishTest, self).setUp()
+
+        # Create a dummy course with an ICRV block
+        self.course = CourseFactory()
+        self.section = ItemFactory.create(parent=self.course, category='chapter', display_name='Test Section')
+        self.subsection = ItemFactory.create(parent=self.section, category='sequential', display_name='Test Subsection')
+        self.vertical = ItemFactory.create(parent=self.subsection, category='vertical', display_name='Test Unit')
+        self.icrv = ItemFactory.create(parent=self.vertical, category='edx-reverification-block')
+
+        # Mark the course as credit
+        CreditCourse.objects.create(course_key=self.course.id, enabled=True)
+
+    def test_can_write_on_publish_signal(self):
+        # Sanity check -- initially user partitions should be empty
+        self.assertEqual(self.course.user_partitions, [])
+
+        # Make and publish a change to a block, which should trigger the publish signal
+        with self.store.bulk_operations(self.course.id):
+            self.icrv.display_name = "Updated display name"
+            self.store.update_item(self.icrv, ModuleStoreEnum.UserID.test)
+            self.store.publish(self.icrv.location, ModuleStoreEnum.UserID.test)
+
+        # Within the test, the course publish signal should have fired synchronously
+        # Since the course is marked as credit, the in-course verification access
+        # rules should have been applied.
+        # We need to verify that these changes were actually persisted to the modulestore.
+        retrieved_course = self.store.get_course(self.course.id)
+        self.assertEqual(len(retrieved_course.user_partitions), 1)
