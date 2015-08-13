@@ -91,6 +91,15 @@ def _find_other_partitions(course, scheme):
     ]
 
 
+def _get_exam_blocks(icrv_block):
+    """TODO """
+    # Sibling assessments of the parent vertical
+    # TODO
+
+    # Sibling verticals of the grandparent sequential
+    return []
+
+
 def _set_verification_partitions(course_key, icrv_blocks):
     """TODO """
     scheme = UserPartition.get_scheme(VERIFICATION_SCHEME_NAME)
@@ -137,6 +146,8 @@ def _tag_icrv_block_and_exam(icrv_block, partitions_by_loc):
         # TODO log
         return
 
+    # Update the in-course reverification block itself
+    # TODO: explain why these two groups are used
     icrv_block.group_access = {
         partition.id: [
             partition.scheme.VERIFIED_ALLOW,
@@ -144,6 +155,17 @@ def _tag_icrv_block_and_exam(icrv_block, partitions_by_loc):
         ]
     }
     _update_published_item(icrv_block)
+
+    # Update the exam content associated with the reverification block
+    # TODO: lots of explanation here
+    for block in _get_exam_blocks(icrv_block):
+        block.group_access = {
+            partition.id: [
+                partition.scheme.NON_VERIFIED,
+                partition.scheme.VERIFIED_ALLOW,
+            ]
+        }
+        _update_published_item(block)
 
 
 def _update_published_item(item):
