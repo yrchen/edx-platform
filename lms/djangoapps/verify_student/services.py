@@ -10,6 +10,8 @@ from django.db import IntegrityError
 
 from opaque_keys.edx.keys import CourseKey
 
+from student.models import User, CourseEnrollment
+from course_modes.models import CourseMode
 from verify_student.models import VerificationCheckpoint, VerificationStatus, SkippedReverification
 
 
@@ -112,3 +114,27 @@ class ReverificationService(object):
         """
         course_key = CourseKey.from_string(course_id)
         return VerificationStatus.get_user_attempts(user_id, course_key, related_assessment_location)
+
+    def can_submit(self, user_id, course_id):
+        """
+        TODO
+        """
+        course_key = CourseKey.from_string(course_id)
+
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            log.warning(
+                (
+                    "Could not find user with ID %s while checking whether "
+                    "the user can submit an in-course reverification"
+                ), user_id
+            )
+            return False
+
+        enrollment = CourseEnrollment.get_enrollment(user, course_key)
+        return (
+            enrollment is not None and
+            enrollment.is_active and
+            enrollment.mode in CourseMode.VERIFIED_MODES
+        )

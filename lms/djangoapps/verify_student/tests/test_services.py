@@ -4,7 +4,9 @@ Tests of re-verification service.
 
 import ddt
 
+from course_modes.models import CourseMode
 from course_modes.tests.factories import CourseModeFactory
+from student.models import CourseEnrollment
 from student.tests.factories import UserFactory
 from verify_student.models import VerificationCheckpoint, VerificationStatus, SkippedReverification
 from verify_student.services import ReverificationService
@@ -129,3 +131,17 @@ class TestReverificationService(ModuleStoreTestCase):
             reverification_service.get_attempts(self.user.id, course_id, self.final_checkpoint_location),
             1
         )
+
+    @ddt.data(*CourseMode.VERIFIED_MODES)
+    def test_can_submit(self, verified_mode):
+        service = ReverificationService()
+        course_id = unicode(self.course_key)
+
+        # Can't submit because not enrolled in a verified mode
+        can_submit = service.can_submit(self.user.id, course_id)
+        self.assertFalse(can_submit)
+
+        # Enroll in a verified mode; now we can submit
+        CourseEnrollment.enroll(self.user, self.course_key, mode=verified_mode)
+        can_submit = service.can_submit(self.user.id, course_id)
+        self.assertTrue(can_submit)
