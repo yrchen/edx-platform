@@ -82,13 +82,12 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
         self.assertEqual(partition.parameters["location"], unicode(self.icrv.location))
 
         # Check that the groups for the partition were created correctly
-        self.assertEqual(len(partition.groups), 3)
+        self.assertEqual(len(partition.groups), 2)
         self.assertItemsEqual(
             [g.id for g in partition.groups],
             [
-                VerificationPartitionScheme.NON_VERIFIED,
-                VerificationPartitionScheme.VERIFIED_DENY,
-                VerificationPartitionScheme.VERIFIED_ALLOW
+                VerificationPartitionScheme.ALLOW,
+                VerificationPartitionScheme.DENY,
             ]
         )
 
