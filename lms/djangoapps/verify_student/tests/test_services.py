@@ -37,6 +37,9 @@ class TestReverificationService(ModuleStoreTestCase):
             org=self.course_key.org, course=self.course_key.course
         )
 
+        # Enroll in a verified mode
+        self.enrollment = CourseEnrollment.enroll(self.user, self.course_key, mode=CourseMode.VERIFIED)
+
     @ddt.data('final', 'midterm')
     def test_start_verification(self, checkpoint_name):
         """Test the 'start_verification' service method.
@@ -132,16 +135,11 @@ class TestReverificationService(ModuleStoreTestCase):
             1
         )
 
-    @ddt.data(*CourseMode.VERIFIED_MODES)
-    def test_can_submit(self, verified_mode):
+    def test_not_in_verified_track(self):
+        # No longer enrolled in a verified track
+        self.enrollment.update_enrollment(mode=CourseMode.HONOR)
+
+        # Should be marked as "skipped" (opted out)
         service = ReverificationService()
-        course_id = unicode(self.course_key)
-
-        # Can't submit because not enrolled in a verified mode
-        can_submit = service.can_submit(self.user.id, course_id)
-        self.assertFalse(can_submit)
-
-        # Enroll in a verified mode; now we can submit
-        CourseEnrollment.enroll(self.user, self.course_key, mode=verified_mode)
-        can_submit = service.can_submit(self.user.id, course_id)
-        self.assertTrue(can_submit)
+        status = service.get_status(self.user.id, unicode(self.course_key), self.final_checkpoint_location)
+        self.assertEqual(status, 'skipped')

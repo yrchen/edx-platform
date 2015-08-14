@@ -38,8 +38,10 @@ class ReverificationService(object):
             verification attempt else None
         """
         course_key = CourseKey.from_string(course_id)
-        has_skipped = SkippedReverification.check_user_skipped_reverification_exists(user_id, course_key)
-        if has_skipped:
+        if (
+            not self._is_enrolled_as_verified(user_id, course_key) or
+            SkippedReverification.check_user_skipped_reverification_exists(user_id, course_key)
+        ):
             return "skipped"
         try:
             checkpoint_status = VerificationStatus.objects.filter(
@@ -115,12 +117,10 @@ class ReverificationService(object):
         course_key = CourseKey.from_string(course_id)
         return VerificationStatus.get_user_attempts(user_id, course_key, related_assessment_location)
 
-    def can_submit(self, user_id, course_id):
+    def _is_enrolled_as_verified(self, user_id, course_key):
         """
         TODO
         """
-        course_key = CourseKey.from_string(course_id)
-
         try:
             user = User.objects.get(id=user_id)
         except User.DoesNotExist:
