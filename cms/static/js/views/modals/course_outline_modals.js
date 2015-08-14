@@ -13,7 +13,8 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
 ) {
     'use strict';
     var CourseOutlineXBlockModal, SettingsXBlockModal, PublishXBlockModal, AbstractEditor, BaseDateEditor,
-        ReleaseDateEditor, DueDateEditor, GradingEditor, PublishEditor, StaffLockEditor, TimedExaminationPreferenceEditor;
+        ReleaseDateEditor, DueDateEditor, GradingEditor, PublishEditor, StaffLockEditor,
+        VerificationAccessEditor, TimedExaminationPreferenceEditor;
 
     CourseOutlineXBlockModal = BaseModal.extend({
         events : {
@@ -410,7 +411,7 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
         },
 
         hasChanges: function() {
-            return this.isModelLocked() != this.isLocked();
+            return this.isModelLocked() !== this.isLocked();
         },
 
         getRequestData: function() {
@@ -426,7 +427,22 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
             return {
                 hasExplicitStaffLock: this.isModelLocked(),
                 ancestorLocked: this.isAncestorLocked()
-            }
+            };
+        }
+    });
+
+    VerificationAccessEditor = AbstractEditor.extend({
+        templateName: 'verification-access-editor',
+        className: 'verification-access',
+
+        getRequestData: function() {
+            return {};
+        },
+
+        getContext: function() {
+            return {
+                "access_info": this.model.get("verification_access_info")
+            };
         }
     });
 
@@ -457,6 +473,11 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
                 editors.push(StaffLockEditor);
             } else if (xblockInfo.isVertical()) {
                 editors = [StaffLockEditor];
+
+                // TODO -- limit this to only if there are verification partitions
+                if (true) {
+                    editors.push(VerificationAccessEditor);
+                }
             }
             return new SettingsXBlockModal($.extend({
                 editors: editors,

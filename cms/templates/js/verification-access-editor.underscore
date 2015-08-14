@@ -1,0 +1,23 @@
+<form>
+<h3 class="modal-section-title"><%= gettext('Verification Access') %></h3>
+<div class="modal-section-content verification-access">
+  <% for (var i = 0; i < access_info.length; i++) {
+    partition = access_info[i];
+  %>
+    <p>Name: <%- partition.name %></p>
+    <p>Id: <%- partition.id %></p>
+    <p>Groups:
+      <ul>
+        <% for (var j = 0; j < partition.groups.length; j++) {
+          group = partition.groups[j];
+        %>
+          <li>
+            Name: <%- group.name %>, Id: <%- group.id %>, Selected: <%- group.selected %>
+          </li>
+
+        <% } %>
+      </ul>
+    </p>
+  <% } %>
+</div>
+</form>

@@ -144,8 +144,11 @@ function(Backbone, _, str, ModuleUtils) {
             /**
              * Optional explanatory message about the xblock.
              */
-            'explanatory_message': null
-
+            'explanatory_message': null,
+            /*
+             * TODO
+             */
+             'verification_access_info': null,
         },
 
         initialize: function () {

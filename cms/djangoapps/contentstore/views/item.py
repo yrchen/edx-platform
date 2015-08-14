@@ -754,6 +754,28 @@ def _get_module_info(xblock, rewrite_static_links=True, include_ancestor_info=Fa
         return xblock_info
 
 
+def _get_xblock_verification_access_info(xblock):
+    """TODO """
+    from openedx.core.djangoapps.credit.partition_schemes import VerificationPartitionScheme
+    course = modulestore().get_course(xblock.location.course_key)
+    return [
+        {
+            "id": p.id,
+            "name": p.name,
+            "groups": [
+                {
+                    "id": g.id,
+                    "name": g.name,
+                    "selected": g.id in xblock.group_access.get(p.id, [])
+                }
+                for g in p.groups
+            ]
+        }
+        for p in sorted(course.user_partitions, key=lambda p: p.name)
+        if p.scheme == VerificationPartitionScheme
+    ]
+
+
 def create_xblock_info(xblock, data=None, metadata=None, include_ancestor_info=False, include_child_info=False,
                        course_outline=False, include_children_predicate=NEVER, parent_xblock=None, graders=None,
                        user=None):
@@ -850,6 +872,7 @@ def create_xblock_info(xblock, data=None, metadata=None, include_ancestor_info=F
         "has_changes": has_changes,
         "actions": xblock_actions,
         "explanatory_message": explanatory_message,
+        "verification_access_info": _get_xblock_verification_access_info(xblock),
     }
 
     # update xblock_info with proctored_exam information if the feature flag is enabled
