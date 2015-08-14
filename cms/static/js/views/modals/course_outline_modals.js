@@ -440,7 +440,7 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
         },
 
         getGroupAccess: function() {
-            var groupAccess = this.model.get('group_access') || [],
+            var groupAccess = _.clone(this.model.get('group_access')) || [],
                 userPartitions = this.model.get('user_partitions') || [],
                 isSelected = this.isPartitionSelected;
 

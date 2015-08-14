@@ -109,6 +109,14 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
         self.assertEqual(self.course.user_partitions, [])
 
     @patch.dict(settings.FEATURES, {"ENABLE_COURSEWARE_INDEX": False})
+    def test_preserves_partition_id_for_verified_partitions(self):
+        self._apply_rules()
+        partition_id = self.course.user_partitions[0].id
+        self._apply_rules()
+        new_partition_id = self.course.user_partitions[0].id
+        self.assertEqual(partition_id, new_partition_id)
+
+    @patch.dict(settings.FEATURES, {"ENABLE_COURSEWARE_INDEX": False})
     def test_preserves_existing_user_partitions(self):
         # Add other, non-verified partition to the course
         self.course.user_partitions = [
