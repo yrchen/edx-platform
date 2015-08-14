@@ -95,14 +95,14 @@ def _set_verification_partitions(course_key, icrv_blocks):
     partitions = [
         UserPartition(
             id=_unique_partition_id(course),
-            name=u"Verification Checkpoint",
+            name=block.related_assessment,
             description=u"Verification Checkpoint",  # TODO: add anything else here?
             scheme=scheme,
             parameters={"location": unicode(block.location)},
             groups=[
-                Group(scheme.NON_VERIFIED, "Not enrolled in a verified track"),
-                Group(scheme.VERIFIED_ALLOW, "Enrolled in a verified track and has access to exam content"),
-                Group(scheme.VERIFIED_DENY, "Enrolled in a verified track and does not have access to exam content"),
+                Group(scheme.NON_VERIFIED, "Honor track"),
+                Group(scheme.VERIFIED_ALLOW, "Verified track and submitted photos"),
+                Group(scheme.VERIFIED_DENY, "Verified track and needs to submit photos"),
             ]
         )
         for block in icrv_blocks
