@@ -149,7 +149,9 @@ class LmsBlockMixin(XBlockMixin):
             try:
                 user_partition = self._get_user_partition(user_partition_id)
             except NoSuchUserPartitionError:
-                has_invalid_user_partitions = True
+                # TODO explain this
+                # and maybe log something here
+                pass
             else:
                 for group_id in group_ids:
                     try:
