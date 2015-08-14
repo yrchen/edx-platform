@@ -43,7 +43,6 @@ class VerificationPartitionScheme(object):
         if (
             not is_enrolled_in_verified_mode(user, course_key) or
             has_skipped_any_checkpoint(user, course_key) or
-            was_denied_at_any_checkpoint(user, course_key) or
             has_completed_checkpoint(user, course_key, checkpoint)
         ):
             # the course content tagged with given 'user_partition' is
@@ -62,6 +61,7 @@ class VerificationPartitionScheme(object):
         try:
             return user_partition.get_group(partition_group)
         except NoSuchUserPartitionGroupError:
+            # TODO -- log here
             return None
 
 
@@ -79,24 +79,6 @@ def is_enrolled_in_verified_mode(user, course_key):
     """
     enrollment_mode, __ = CourseEnrollment.enrollment_mode_for_user(user, course_key)
     return enrollment_mode in CourseMode.VERIFIED_MODES
-
-
-def was_denied_at_any_checkpoint(user, course_key):
-    """Returns the Boolean value if given user with given course was denied for any
-    incourse verification checkpoint.
-
-    Args:
-        user(User): user object
-        course_key(CourseKey): CourseKey
-
-    Returns:
-        Boolean
-    """
-    return VerificationStatus.objects.filter(
-        user=user,
-        checkpoint__course_id=course_key,
-        status='denied'
-    ).exists()
 
 
 def has_skipped_any_checkpoint(user, course_key):
@@ -126,4 +108,4 @@ def has_completed_checkpoint(user, course_key, checkpoint):
     Returns:
         unicode or None
     """
-    return VerificationStatus.check_user_has_completed_checkpoint(user, course_key, checkpoint)
+    return VerificationStatus.check_user_has_submitted(user, course_key, checkpoint)

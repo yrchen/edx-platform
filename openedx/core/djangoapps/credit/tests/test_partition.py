@@ -5,7 +5,6 @@ Tests for In-Course Reverification Access Control Partition scheme
 
 import ddt
 import unittest
-from mock import Mock
 
 from django.conf import settings
 
@@ -17,6 +16,7 @@ from lms.djangoapps.verify_student.models import (
 from openedx.core.djangoapps.credit.partition_schemes import VerificationPartitionScheme
 from student.models import CourseEnrollment
 from student.tests.factories import UserFactory
+from xmodule.partitions.partitions import UserPartition, Group
 from xmodule.modulestore.tests.django_utils import ModuleStoreTestCase
 from xmodule.modulestore.tests.factories import CourseFactory
 
@@ -38,10 +38,19 @@ class ReverificationPartitionTest(ModuleStoreTestCase):
         self.checkpoint_location = u'i4x://{org}/{course}/edx-reverification-block/first_uuid'.format(
             org=self.course.id.org, course=self.course.id.course
         )
-        self.user_partition = Mock(user_partitions=[])
-        self.user_partition.parameters = {
-            "location": self.checkpoint_location
-        }
+
+        scheme = UserPartition.get_scheme("verification")
+        self.user_partition = UserPartition(
+            id=0,
+            name=u"Verification Checkpoint",
+            description=u"Verification Checkpoint",
+            scheme=scheme,
+            parameters={"location": self.checkpoint_location},
+            groups=[
+                Group(scheme.ALLOW, "Allow access to content"),
+                Group(scheme.DENY, "Deny access to content"),
+            ]
+        )
 
         self.first_checkpoint = VerificationCheckpoint.objects.create(
             course_id=self.course.id,
@@ -70,56 +79,22 @@ class ReverificationPartitionTest(ModuleStoreTestCase):
         )
 
     @ddt.data(
-        ("verified", SUBMITTED),
-        ("verified", APPROVED),
-        ("verified", SUBMITTED),
-        ("verified", DENIED),
-        ("verified", None),
-        ("honor", False),
+        ("verified", SUBMITTED, VerificationPartitionScheme.ALLOW),
+        ("verified", APPROVED, VerificationPartitionScheme.ALLOW),
+        ("verified", SUBMITTED, VerificationPartitionScheme.ALLOW),
+        ("verified", DENIED, VerificationPartitionScheme.ALLOW),
+        ("verified", None, VerificationPartitionScheme.DENY),
+        ("honor", None, VerificationPartitionScheme.ALLOW),
     )
     @ddt.unpack
-    def test_get_group_for_user(self, enrollment_type, verification_status):
+    def test_get_group_for_user(self, enrollment_type, verification_status, expected_group):
         # creating user and enroll them.
         user = self.created_user_and_enroll(enrollment_type)
         if verification_status:
             self.add_verification_status(user, verification_status)
 
-        if enrollment_type == 'honor':
-            self.assertEqual(
-                VerificationPartitionScheme.NON_VERIFIED,
-                VerificationPartitionScheme.get_group_for_user(
-                    self.course.id,
-                    user,
-                    self.user_partition
-                )
-            )
-
-        elif (
-                verification_status in [
-                    self.SUBMITTED,
-                    self.APPROVED,
-                    self.DENIED
-                ]
-                and enrollment_type == 'verified'
-        ):
-            self.assertEqual(
-                VerificationPartitionScheme.VERIFIED_ALLOW,
-                VerificationPartitionScheme.get_group_for_user(
-                    self.course.id,
-                    user,
-                    self.user_partition
-                )
-            )
-
-        else:
-            self.assertEqual(
-                VerificationPartitionScheme.VERIFIED_DENY,
-                VerificationPartitionScheme.get_group_for_user(
-                    self.course.id,
-                    user,
-                    self.user_partition
-                )
-            )
+        actual_group = VerificationPartitionScheme.get_group_for_user(self.course.id, user, self.user_partition)
+        self.assertEqual(actual_group.id, expected_group)
 
     def test_get_group_for_user_with_skipped(self):
         # Check that a user is in verified allow group if that user has skipped
@@ -132,11 +107,9 @@ class ReverificationPartitionTest(ModuleStoreTestCase):
             course_id=self.course.id
         )
 
-        self.assertEqual(
-            VerificationPartitionScheme.VERIFIED_ALLOW,
-            VerificationPartitionScheme.get_group_for_user(
-                self.course.id,
-                user,
-                self.user_partition
-            )
+        actual_group = VerificationPartitionScheme.get_group_for_user(
+            self.course.id,
+            user,
+            self.user_partition
         )
+        self.assertEqual(actual_group.id, VerificationPartitionScheme.ALLOW)
