@@ -21,23 +21,9 @@ class VerificationPartitionScheme(object):
     verification for an ICRV then the related gated exam content for that ICRV
     will be displayed.
 
-    Following scenarios can be handled:
-
-    non_verified: When a student is not enrolled as 'verified'
-    all ICRV blocks will be hidden but the student will have access
-    to all the gated exams content.
-
-    verified_allow: When a student skips or submits or denied at any
-    ICRV checkpoint verification then that student will be allowed to access
-    the gated exam content of that ICRV.
-
-    verified_deny: When a student has failed (used all attempts) an ICRV verification,
-    all ICRV blocks will be hidden and the student will have access to all
-    the gated exams content.
     """
-    NON_VERIFIED = 0
-    VERIFIED_ALLOW = 1
-    VERIFIED_DENY = 2
+    DENY = 0
+    ALLOW = 1
 
     @classmethod
     def get_group_for_user(cls, course_key, user, user_partition):
@@ -55,27 +41,22 @@ class VerificationPartitionScheme(object):
         """
         checkpoint = user_partition.parameters['location']
         if (
-                not is_enrolled_in_verified_mode(user, course_key)
-        ):
-            # the course content tagged with given 'user_partition' is
-            # accessible/visible to all the students
-            partition_group = cls.NON_VERIFIED
-        elif (
-                has_skipped_any_checkpoint(user, course_key) or
-                was_denied_at_any_checkpoint(user, course_key) or
-                has_completed_checkpoint(user, course_key, checkpoint)
+            not is_enrolled_in_verified_mode(user, course_key) or
+            has_skipped_any_checkpoint(user, course_key) or
+            was_denied_at_any_checkpoint(user, course_key) or
+            has_completed_checkpoint(user, course_key, checkpoint)
         ):
             # the course content tagged with given 'user_partition' is
             # accessible/visible to the students enrolled as `verified` users
             # and has either `skipped any ICRV` or `was denied at any ICRV
             # (used all attempts for an ICRV but still denied by the software
             # secure)` or `has submitted/approved verification for given ICRV`
-            partition_group = cls.VERIFIED_ALLOW
+            partition_group = cls.ALLOW
         else:
             # the course content tagged with given 'user_partition' is
             # accessible/visible to the students enrolled as `verified` users
             # and has not yet submitted for the related ICRV
-            partition_group = cls.VERIFIED_DENY
+            partition_group = cls.DENY
 
         # return matching user partition group if it exists
         try:

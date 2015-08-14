@@ -435,13 +435,59 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
         templateName: 'verification-access-editor',
         className: 'verification-access',
 
+        isPartitionSelected: function(id) {
+            return $("#partition-" + id).is(':checked');
+        },
+
+        getGroupAccess: function() {
+            var groupAccess = this.model.get('group_access') || [],
+                userPartitions = this.model.get('user_partitions') || [],
+                isSelected = this.isPartitionSelected;
+
+            _.each(userPartitions, function(partition) {
+                if (partition.scheme === "verification") {
+                    if (isSelected(partition.id)) {
+                        // Restrict access -- TODO explain
+                        groupAccess[partition.id] = [1];
+                    } else {
+                        // Allow access -- TODO: explain
+                        delete groupAccess[partition.id];
+                    }
+                }
+            });
+
+            return groupAccess;
+        },
+
         getRequestData: function() {
-            return {};
+            var groupAccess = this.getGroupAccess(),
+                hasChanges = !_.isEqual(groupAccess, this.model.get('group_access'));
+
+            return hasChanges ? {
+                publish: 'republish',
+                metadata: {
+                    group_access: this.getGroupAccess()
+                }
+            } : {};
         },
 
         getContext: function() {
+            var partitions = this.model.get("user_partitions"),
+                accessInfo = [];
+
+            // TODO -- explain this
+            _.each(partitions, function(item) {
+                if (item.scheme === "verification") {
+                    accessInfo.push({
+                        "id": item.id,
+                        "name": item.name,
+                        "selected": _.any(_.pluck(item.groups, "selected"))
+                    });
+                }
+            });
+
             return {
-                "access_info": this.model.get("verification_access_info")
+                "access_info": accessInfo
             };
         }
     });

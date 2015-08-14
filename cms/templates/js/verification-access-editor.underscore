@@ -1,31 +1,21 @@
 <form>
 <h3 class="modal-section-title"><%= gettext('Verification Access') %></h3>
 <div class="modal-section-content verification-access">
+
   <% for (var i = 0; i < access_info.length; i++) {
     partition = access_info[i];
   %>
   <div class="verification-partition">
-    <div class="verification-partition-name"><%- partition.name %></div>
-    <div class="verification-partition-groups">
-      <% for (var j = 0; j < partition.groups.length; j++) {
-        group = partition.groups[j];
-      %>
-        <div class="verification-choice">
-          <input
-            type="checkbox"
-            id="partition-<%- partition.id %>-group-<%- group.id %>"
-            name="partition-<%- partition.id %>-group-<%- group.id %>"
-            <% if (group.selected) { %>
-              checked="checked"
-            <% } %>
-            value="" />
-          <label for="partition-<%- partition.id %>-group-<% group.id %>">
-            <%- group.name %>
-          </label>
-        </div>
+    <input
+      type="checkbox"
+      id="partition-<%- partition.id %>"
+      name="partition-<%- partition.id %>"
+      value=""
+      <% if (partition.selected) { %>
+        checked="checked"
       <% } %>
-    </div>
-  </div>
+    />
+    <label for="partition-<%- partition.id %>">Require verification at <%- partition.name %></label>
   <% } %>
 </div>
 </form>

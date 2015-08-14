@@ -148,7 +148,11 @@ function(Backbone, _, str, ModuleUtils) {
             /*
              * TODO
              */
-             'verification_access_info': null,
+             'group_access': null,
+            /*
+             * TODO
+             */
+             'user_partitions': null,
         },
 
         initialize: function () {
