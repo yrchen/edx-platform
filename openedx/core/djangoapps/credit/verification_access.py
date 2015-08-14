@@ -54,7 +54,7 @@ def _unique_partition_id(course):
 
 
 def _find_other_partitions(course, scheme):
-    """TODO """
+    """todo """
     return [
         p for p in course.user_partitions
         if p.scheme != scheme
@@ -73,9 +73,18 @@ def _set_verification_partitions(course_key, icrv_blocks):
         # TODO: log an error here
         return []
 
+    partition_id_for_location = {
+        p.parameters["location"]: p.id
+        for p in course.user_partitions
+        if p.scheme == scheme and "location" in p.parameters
+    }
+
     partitions = [
         UserPartition(
-            id=_unique_partition_id(course),
+            id=partition_id_for_location.get(
+                unicode(block.location),
+                _unique_partition_id(course)
+            ),
             name=block.related_assessment,
             description=u"Verification Checkpoint",  # TODO: add anything else here?
             scheme=scheme,
