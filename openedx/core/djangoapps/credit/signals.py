@@ -9,7 +9,7 @@ from django.utils import timezone
 from opaque_keys.edx.keys import CourseKey
 
 from openedx.core.djangoapps.signals.signals import GRADES_UPDATED
-from openedx.core.djangoapps.credit.verification_access import apply_verification_access_rules
+from openedx.core.djangoapps.credit.verification_access import create_verification_partitions
 from xmodule.modulestore.django import SignalHandler
 
 
@@ -44,7 +44,7 @@ def on_pre_publish(sender, course_key, **kwargs):
         # step by the LMS, and the transformation should be owned by the verify_student app.
         # Since none of that infrastructure currently exists, we're doing it this way instead.
         log.info(u"Starting to update in-course reverification access rules")
-        apply_verification_access_rules(course_key)
+        create_verification_partitions(course_key)
         log.info(u"Finished updating in-course reverification access rules")
 
 

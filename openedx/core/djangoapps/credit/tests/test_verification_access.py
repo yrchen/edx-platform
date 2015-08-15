@@ -17,7 +17,7 @@ from django.conf import settings
 
 from openedx.core.djangoapps.credit.models import CreditCourse
 from openedx.core.djangoapps.credit.partition_schemes import VerificationPartitionScheme
-from openedx.core.djangoapps.credit.verification_access import apply_verification_access_rules
+from openedx.core.djangoapps.credit.verification_access import create_verification_partitions
 from openedx.core.djangoapps.credit.signals import on_pre_publish
 from xmodule.modulestore import ModuleStoreEnum
 from xmodule.modulestore.django import SignalHandler
@@ -167,7 +167,7 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
 
     def _apply_rules(self):
         """TODO """
-        apply_verification_access_rules(self.course.id)
+        create_verification_partitions(self.course.id)
 
         # Reload the published version of each component to get changes
         self.course = self.store.get_course(self.course.id)

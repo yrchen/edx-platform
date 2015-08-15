@@ -1,5 +1,5 @@
 """
-Apply in-course reverification access rules to a course.
+Create in-course reverification access groups in a course.
 
 We model the rules as a set of user partitions, one for each
 verification checkpoint in a course.
@@ -34,9 +34,21 @@ VERIFICATION_SCHEME_NAME = "verification"
 VERIFICATION_BLOCK_CATEGORY = "edx-reverification-block"
 
 
-def apply_verification_access_rules(course_key):
+def create_verification_partitions(course_key):
     """
-    TODO
+    Create a user partition for each verification checkpoint in the course.
+
+    This will modify the published version of the course descriptor.
+    It ensures that any in-course reverification XBlocks in the course
+    have an associated user partition.  Other user partitions (e.g. cohorts)
+    will be preserved.  Partitions associated with deleted reverification checkpoints
+    will be marked as inactive and will not be used to restrict access.
+
+    Arguments:
+        course_key (CourseKey): identifier for the course.
+
+    Returns:
+        None
     """
     # Retrieve all in-course reverification blocks in the course
     icrv_blocks = get_course_blocks(course_key, VERIFICATION_BLOCK_CATEGORY)
@@ -52,7 +64,7 @@ def apply_verification_access_rules(course_key):
 
 
 def _unique_partition_id(course):
-    """TODO """
+    """Return a unique user partition ID for the course. """
     # Exclude all previously used IDs, even for partitions that have been disabled
     # (e.g. if the course author deleted an in-course reverifification block but
     # there are courseware components that reference the disabled partition).
@@ -61,16 +73,33 @@ def _unique_partition_id(course):
 
 
 def _other_partitions(all_partitions, exclude_partitions, course_key):
-    """todo """
+    """
+    Retrieve all partitions NOT associated with the current set of ICRV blocks.
+
+    Any partition associated with a deleted ICRV block will be marked as inactive
+    so its access rules will no longer be enforced.
+
+    Any non-verified partition will be preserved without modification.
+
+    Arguments:
+        all_partitions (list of UserPartition): All partitions defined in the course.
+        exclude_partitions (list of UserPartition): Partitions to exclude (e.g. the ICRV partitions already added)
+        course_key (CourseKey): Identifier for the course (used for logging).
+
+    Returns: list of `UserPartition`s
+
+    """
     results = []
     partition_by_id = {
         p.id: p for p in all_partitions
     }
+    other_partition_ids = set(p.id for p in all_partitions) - set(p.id for p in exclude_partitions)
 
-    for pid in set(p.id for p in all_partitions) - set(p.id for p in exclude_partitions):
+    for pid in other_partition_ids:
         partition = partition_by_id[pid]
 
-        # TODO -- explain
+        # Mark deleted verification partitions as inactive so they will
+        # no longer be used to control access.
         if partition.scheme.name == VERIFICATION_SCHEME_NAME:
             results.append(
                 UserPartition(
@@ -91,7 +120,7 @@ def _other_partitions(all_partitions, exclude_partitions, course_key):
                 partition.id, course_key
             )
 
-        # TODO -- explain
+        # Preserve non-verified partitions without modifying them.
         else:
             results.append(partition)
             log.info(
@@ -106,15 +135,27 @@ def _other_partitions(all_partitions, exclude_partitions, course_key):
 
 
 def _set_verification_partitions(course_key, icrv_blocks):
-    """TODO """
+    """
+    Create or update user partitions in the course.
+
+    Ensures that each ICRV block in the course has an associated user partition
+    with the groups ALLOW and DENY.
+
+    Arguments:
+        course_key (CourseKey): Identifier for the course.
+        icrv_blocks (list of XBlock): In-course reverification blocks, e.g. reverification checkpoints.
+
+    Returns:
+        list of UserPartition
+    """
     scheme = UserPartition.get_scheme(VERIFICATION_SCHEME_NAME)
     if scheme is None:
-        # TODO -- log an error here
+        log.error("Could not retrieve user partition scheme with ID %s", VERIFICATION_SCHEME_NAME)
         return []
 
     course = modulestore().get_course(course_key)
     if course is None:
-        # TODO: log an error here
+        log.error("Could not find course %s", course_key)
         return []
 
     partition_id_for_location = {
