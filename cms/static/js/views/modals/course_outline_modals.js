@@ -435,6 +435,10 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
         templateName: 'verification-access-editor',
         className: 'edit-verification-access',
 
+        // This constant MUST match the group ID
+        // defined by VerificationPartitionScheme on the backend!
+        ALLOW_GROUP_ID: 1,
+
         isPartitionSelected: function(id) {
             return $("#partition-" + id).is(':checked');
         },
@@ -442,15 +446,33 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
         getGroupAccess: function() {
             var groupAccess = _.clone(this.model.get('group_access')) || [],
                 userPartitions = this.model.get('user_partitions') || [],
-                isSelected = this.isPartitionSelected;
+                that = this;
 
+            // We display a simplified UI to course authors.
+            // On the backend, each verification checkpoint is associated
+            // with a user partition that has two groups.  For example,
+            // if two checkpoints were defined, they might look like:
+            //
+            // Midterm A: |-- ALLOW --|-- DENY --|
+            // Midterm B: |-- ALLOW --|-- DENY --|
+            //
+            // To make life easier for course authors, we display
+            // *one* checkbox for each checkpoint, like this:
+            //
+            // * Require verification for Midterm A
+            // * Require verification for Midterm B
+            //
+            // This is where we map the simplified checkbox to
+            // the underlying user partition.  If the user checked
+            // the box, that means there *is* a restriction,
+            // so only the "ALLOW" group has access.
+            // Otherwise, all groups in the partition have access.
+            //
             _.each(userPartitions, function(partition) {
                 if (partition.scheme === "verification") {
-                    if (isSelected(partition.id)) {
-                        // Restrict access -- TODO explain
-                        groupAccess[partition.id] = [1];
+                    if (that.isPartitionSelected(partition.id)) {
+                        groupAccess[partition.id] = [that.ALLOW_GROUP_ID];
                     } else {
-                        // Allow access -- TODO: explain
                         delete groupAccess[partition.id];
                     }
                 }
@@ -475,7 +497,11 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
             var partitions = this.model.get("user_partitions"),
                 accessInfo = [];
 
-            // TODO -- explain this
+            // Display a simplified version of verified partition schemes.
+            // Although there are two groups defined (ALLOW and DENY),
+            // we show only the ALLOW group.
+            // To avoid searching all the groups, we're assuming that the editor
+            // either sets the ALLOW group or doesn't set any groups (implicitly allow all).
             _.each(partitions, function(item) {
                 if (item.scheme === "verification") {
                     accessInfo.push({

@@ -214,12 +214,11 @@ def is_visible_to_specific_content_groups(xblock):
     """
     if not xblock.group_access:
         return False
-    for __, value in xblock.group_access.iteritems():
-        # value should be a list of group IDs. If it is an empty list or None, the xblock is visible
-        # to all groups in that particular partition. So if value is a truthy value, the xblock is
-        # restricted in some way.
-        if value:
+
+    for partition in get_user_partition_info(xblock):
+        if any(g["selected"] for g in partition["groups"]):
             return True
+
     return False
 
 
@@ -335,16 +334,72 @@ def has_active_web_certificate(course):
 
 
 def get_user_partition_info(xblock, schemes=None):
-    """TODO """
+    """
+    Retrieve user partition information for an XBlock for display in editors.
+
+    * If a partition has been disabled, it will be excluded from the results.
+
+    * If a group within a partition is referenced by the XBlock, but the group has been deleted,
+      the group will be marked as deleted in the results.
+
+    Arguments:
+        xblock (XBlock): The courseware component being edited.
+
+    Keyword Arguments:
+        schemes (iterable of str): If provided, filter partitions to include only
+            schemes with the provided names.
+
+    Returns: list
+
+    Example Usage:
+    >>> get_user_partition_info(block, schemes=["cohort", "verification"])
+    [
+        {
+            "id": 12345,
+            "name": "Cohorts"
+            "scheme": "cohort",
+            "groups": [
+                {
+                    "id": 7890,
+                    "name": "Foo",
+                    "selected": True,
+                    "deleted": False,
+                }
+            ]
+        },
+        {
+            "id": 7292,
+            "name": "Midterm A",
+            "scheme": "verification",
+            "groups": [
+                {
+                    "id": 1,
+                    "name": "Completed verification at Midterm A",
+                    "selected": False,
+                    "deleted": False
+                },
+                {
+                    "id": 0,
+                    "name": "Did not complete verification at Midterm A",
+                    "selected": False,
+                    "deleted": False,
+                }
+            ]
+        }
+    ]
+
+    """
     course = modulestore().get_course(xblock.location.course_key)
     if course is None:
-        # TODO -- log
+        log.warning(
+            "Could not find course %s to retrieve user partition information",
+            xblock.location.course_key
+        )
         return []
 
     if schemes is not None:
         schemes = set(schemes)
 
-    # TODO -- explain this
     partitions = [
         {
             "id": p.id,
