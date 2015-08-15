@@ -49,16 +49,44 @@ def apply_verification_access_rules(course_key):
 
 def _unique_partition_id(course):
     """TODO """
+    # Exclude all previously used IDs, even for partitions that have been disabled
+    # (e.g. if the course author deleted an in-course reverifification block but
+    # there are courseware components that reference the disabled partition).
     used_ids = set(p.id for p in course.user_partitions)
     return generate_int_id(used_ids=used_ids)
 
 
-def _find_other_partitions(course, scheme):
+def _other_partitions(all_partitions, exclude_partitions):
     """todo """
-    return [
-        p for p in course.user_partitions
-        if p.scheme != scheme
-    ]
+    results = []
+    partition_by_id = {
+        p.id: p for p in all_partitions
+    }
+
+    for pid in set(p.id for p in all_partitions) - set(p.id for p in exclude_partitions):
+        partition = partition_by_id[pid]
+
+        # TODO -- explain
+        # TODO -- logging
+        if partition.scheme.name == VERIFICATION_SCHEME_NAME:
+            results.append(
+                UserPartition(
+                    id=partition.id,
+                    name=partition.name,
+                    description=partition.description,
+                    scheme=partition.scheme,
+                    parameters=partition.parameters,
+                    groups=partition.groups,
+                    active=False,
+                )
+            )
+
+        # TODO -- explain
+        # TODO -- logging
+        else:
+            results.append(partition)
+
+    return results
 
 
 def _set_verification_partitions(course_key, icrv_blocks):
@@ -98,7 +126,8 @@ def _set_verification_partitions(course_key, icrv_blocks):
     ]
 
     # Preserve existing, non-verified partitions from the course
-    course.user_partitions = partitions + _find_other_partitions(course, scheme)
+    # Mark partitions for deleted in-course reverification as disabled.
+    course.user_partitions = partitions + _other_partitions(course.user_partitions, partitions)
     modulestore().update_item(course, ModuleStoreEnum.UserID.system)
 
     return partitions

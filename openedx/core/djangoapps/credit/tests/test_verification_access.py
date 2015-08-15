@@ -97,15 +97,14 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
         self._apply_rules()
 
         # Delete the reverification block, then update the access rules
-        self.store.delete_item(
-            self.icrv.location,
-            ModuleStoreEnum.UserID.test,
-            revision=ModuleStoreEnum.RevisionOption.published_only,
-        )
+        self.store.delete_item(self.icrv.location, ModuleStoreEnum.UserID.test)
         self._apply_rules()
 
-        # Check that the user partition was removed from the course
-        self.assertEqual(self.course.user_partitions, [])
+        # Check that the user partition was marked as inactive
+        self.assertEqual(len(self.course.user_partitions), 1)
+        partition = self.course.user_partitions[0]
+        self.assertFalse(partition.active)
+        self.assertEqual(partition.scheme.name, "verification")
 
     @patch.dict(settings.FEATURES, {"ENABLE_COURSEWARE_INDEX": False})
     def test_preserves_partition_id_for_verified_partitions(self):
