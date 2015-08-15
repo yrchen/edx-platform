@@ -97,7 +97,11 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
         self._apply_rules()
 
         # Delete the reverification block, then update the access rules
-        self.store.delete_item(self.icrv.location, ModuleStoreEnum.UserID.test)
+        self.store.delete_item(
+            self.icrv.location,
+            ModuleStoreEnum.UserID.test,
+            revision=ModuleStoreEnum.RevisionOption.published_only
+        )
         self._apply_rules()
 
         # Check that the user partition was marked as inactive
