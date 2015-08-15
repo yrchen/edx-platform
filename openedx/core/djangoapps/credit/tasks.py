@@ -146,7 +146,7 @@ def _get_xblocks(course_key, category):
 
     Returns only XBlocks that are published and haven't been deleted.
     """
-    xblocks = get_course_blocks(course_key, category, revision=ModuleStoreEnum.RevisionOption.published_only)
+    xblocks = get_course_blocks(course_key, category)
 
     # Secondary sort on credit requirement name
     xblocks = sorted(xblocks, key=lambda block: block.get_credit_requirement_display_name())
