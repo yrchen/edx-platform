@@ -344,7 +344,8 @@ def get_user_partition_info(xblock, schemes=None):
     if schemes is not None:
         schemes = set(schemes)
 
-    return [
+    # TODO -- explain this
+    partitions = [
         {
             "id": p.id,
             "name": p.name,
@@ -353,7 +354,8 @@ def get_user_partition_info(xblock, schemes=None):
                 {
                     "id": g.id,
                     "name": g.name,
-                    "selected": g.id in xblock.group_access.get(p.id, [])
+                    "selected": g.id in xblock.group_access.get(p.id, []),
+                    "deleted": False,
                 }
                 for g in p.groups
             ]
@@ -365,3 +367,20 @@ def get_user_partition_info(xblock, schemes=None):
             (schemes is None or p.scheme.name in schemes)  # Filter partitions by scheme
         )
     ]
+
+    # Add in groups for partitions that are stored in the XBlock
+    # but not in the course, but mark them as "deleted".
+    for p in partitions:
+        xblock_group_ids = set(xblock.group_access.get(p["id"], []))
+        defined_group_ids = set(g["id"] for g in p["groups"])
+        missing_group_ids = xblock_group_ids - defined_group_ids
+
+        for gid in missing_group_ids:
+            p["groups"].append({
+                "id": gid,
+                "name": "Deleted group",
+                "selected": True,
+                "deleted": True,
+            })
+
+    return partitions

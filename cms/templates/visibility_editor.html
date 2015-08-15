@@ -87,28 +87,20 @@ is_staff_locked = ancestor_has_staff_lock(xblock)
                                             class="input input-checkbox"
                                             ${'checked="checked"' if group["selected"] else ''}
                                         />
-                                        <label for="visibility-content-group-${partition["id"]}-${group["id"]}" class="label">${group["name"] | h}</label>
+
+                                        ## For cohorts, we show deleted groups so the user can remove them.
+                                        ## For verification, we don't bother, since the user can't delete groups (allow/deny).
+                                        % if partition["scheme"] == "cohort" and group["deleted"]:
+                                            <label for="visibility-content-group-${partition["id"]}-${group_id}" class="label">
+                                                ${_('Deleted Content Group')}
+                                                <span class="note">${_('Content group no longer exists. Please choose another or allow access to All Students and staff')}</span>
+                                            </label>
+                                        % else:
+                                            <label for="visibility-content-group-${partition["id"]}-${group["id"]}" class="label">${group["name"] | h}</label>
+                                        % endif
                                     </li>
                                     % endif
                                 % endfor
-
-                                % if partition["scheme"] == "cohort":
-                                    % for group_id in missing_group_ids:
-                                    <li class="field field-checkbox field-visibility-content-group was-removed">
-                                        <input type="checkbox"
-                                            id="visibility-content-group-${partition["id"]}-${group_id}"
-                                            name="visibility-content-group"
-                                            value="${partition["id"]}-${group_id}"
-                                            class="input input-checkbox"
-                                            checked="checked"
-                                        />
-                                        <label for="visibility-content-group-${partition["id"]}-${group_id}" class="label">
-                                            ${_('Deleted Content Group')}
-                                            <span class="note">${_('Content group no longer exists. Please choose another or allow access to All Students and staff')}</span>
-                                        </label>
-                                    </li>
-                                    % endfor
-                                % endif
                             % endfor
                             </ul>
                         </div>
