@@ -132,12 +132,12 @@ def _set_verification_partitions(course_key, icrv_blocks):
                 _unique_partition_id(course)
             ),
             name=block.related_assessment,
-            description=u"Verification Checkpoint",  # TODO: add anything else here?
+            description=u"Verification checkpoint at {}".format(block.related_assessment),
             scheme=scheme,
             parameters={"location": unicode(block.location)},
             groups=[
-                Group(scheme.ALLOW, "Allow access to content"),
-                Group(scheme.DENY, "Deny access to content"),
+                Group(scheme.ALLOW, "Completed verification at {}".format(block.related_assessment)),
+                Group(scheme.DENY, "Did not complete verification at {}".format(block.related_assessment)),
             ]
         )
         partitions.append(partition)

@@ -332,3 +332,36 @@ def has_active_web_certificate(course):
                 cert_config = True
                 break
     return cert_config
+
+
+def get_user_partition_info(xblock, schemes=None):
+    """TODO """
+    course = modulestore().get_course(xblock.location.course_key)
+    if course is None:
+        # TODO -- log
+        return []
+
+    if schemes is not None:
+        schemes = set(schemes)
+
+    return [
+        {
+            "id": p.id,
+            "name": p.name,
+            "scheme": p.scheme.name,
+            "groups": [
+                {
+                    "id": g.id,
+                    "name": g.name,
+                    "selected": g.id in xblock.group_access.get(p.id, [])
+                }
+                for g in p.groups
+            ]
+        }
+        for p in sorted(course.user_partitions, key=lambda p: p.name)
+        if (
+            p.active and  # Exclude disabled partitions
+            p.groups and  # Exclude partitions with no groups defined
+            (schemes is None or p.scheme.name in schemes)  # Filter partitions by scheme
+        )
+    ]

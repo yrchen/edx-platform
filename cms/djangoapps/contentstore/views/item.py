@@ -40,8 +40,11 @@ from util.date_utils import get_default_time_display
 from util.json_request import expect_json, JsonResponse
 
 from student.auth import has_studio_write_access, has_studio_read_access
-from contentstore.utils import find_release_date_source, find_staff_lock_source, is_currently_visible_to_students, \
-    ancestor_has_staff_lock, has_children_visible_to_specific_content_groups
+from contentstore.utils import (
+    find_release_date_source, find_staff_lock_source, is_currently_visible_to_students,
+    ancestor_has_staff_lock, has_children_visible_to_specific_content_groups,
+    get_user_partition_info,
+)
 from contentstore.views.helpers import is_unit, xblock_studio_url, xblock_primary_child_category, \
     xblock_type_display_name, get_parent_xblock, create_xblock, usage_key_with_run
 from contentstore.views.preview import get_preview_fragment
@@ -754,27 +757,6 @@ def _get_module_info(xblock, rewrite_static_links=True, include_ancestor_info=Fa
         return xblock_info
 
 
-def _get_user_partition_info(xblock):
-    """TODO """
-    course = modulestore().get_course(xblock.location.course_key)
-    return [
-        {
-            "id": p.id,
-            "name": p.name,
-            "scheme": p.scheme.name,
-            "groups": [
-                {
-                    "id": g.id,
-                    "name": g.name,
-                    "selected": g.id in xblock.group_access.get(p.id, [])
-                }
-                for g in p.groups
-            ]
-        }
-        for p in sorted(course.user_partitions, key=lambda p: p.name)
-        if p.active
-    ]
-
 
 def create_xblock_info(xblock, data=None, metadata=None, include_ancestor_info=False, include_child_info=False,
                        course_outline=False, include_children_predicate=NEVER, parent_xblock=None, graders=None,
@@ -873,7 +855,7 @@ def create_xblock_info(xblock, data=None, metadata=None, include_ancestor_info=F
         "actions": xblock_actions,
         "explanatory_message": explanatory_message,
         "group_access": xblock.group_access,
-        "user_partitions": _get_user_partition_info(xblock),
+        "user_partitions": get_user_partition_info(xblock),
     }
 
     # update xblock_info with proctored_exam information if the feature flag is enabled
