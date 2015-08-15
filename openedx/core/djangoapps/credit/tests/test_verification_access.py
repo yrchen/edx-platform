@@ -169,10 +169,10 @@ class CreateVerificationPartitionTest(ModuleStoreTestCase):
 
     def _update_partitions(self):
         """Update user partitions in the course descriptor, then reload the content. """
-        create_verification_partitions(self.course.id)
+        create_verification_partitions(self.course.id)  # pylint: disable=no-member
 
         # Reload each component so we can see the changes
-        self.course = self.store.get_course(self.course.id)
+        self.course = self.store.get_course(self.course.id)  # pylint: disable=no-member
         self.sections = [self._reload_item(section.location) for section in self.sections]
         self.subsections = [self._reload_item(subsection.location) for subsection in self.subsections]
         self.verticals = [self._reload_item(vertical.location) for vertical in self.verticals]
@@ -206,7 +206,7 @@ class WriteOnPublishTest(ModuleStoreTestCase):
         self.icrv = ItemFactory.create(parent=self.vertical, category='edx-reverification-block')
 
         # Mark the course as credit
-        CreditCourse.objects.create(course_key=self.course.id, enabled=True)
+        CreditCourse.objects.create(course_key=self.course.id, enabled=True)  # pylint: disable=no-member
 
     @patch.dict(settings.FEATURES, {"ENABLE_COURSEWARE_INDEX": False})
     def test_can_write_on_publish_signal(self):
@@ -214,7 +214,7 @@ class WriteOnPublishTest(ModuleStoreTestCase):
         self.assertEqual(self.course.user_partitions, [])
 
         # Make and publish a change to a block, which should trigger the publish signal
-        with self.store.bulk_operations(self.course.id):
+        with self.store.bulk_operations(self.course.id):  # pylint: disable=no-member
             self.icrv.display_name = "Updated display name"
             self.store.update_item(self.icrv, ModuleStoreEnum.UserID.test)
             self.store.publish(self.icrv.location, ModuleStoreEnum.UserID.test)
@@ -223,5 +223,5 @@ class WriteOnPublishTest(ModuleStoreTestCase):
         # Since the course is marked as credit, the in-course verification access
         # rules should have been applied.
         # We need to verify that these changes were actually persisted to the modulestore.
-        retrieved_course = self.store.get_course(self.course.id)
+        retrieved_course = self.store.get_course(self.course.id)  # pylint: disable=no-member
         self.assertEqual(len(retrieved_course.user_partitions), 1)
