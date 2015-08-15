@@ -19,11 +19,16 @@ where the groups are defined as:
 * DENY: TODO
 
 """
+import logging
+
 from util.db import generate_int_id
 from openedx.core.djangoapps.credit.utils import get_course_blocks
 from xmodule.modulestore.django import modulestore
 from xmodule.modulestore import ModuleStoreEnum
 from xmodule.partitions.partitions import Group, UserPartition, NoSuchUserPartitionError
+
+
+log = logging.getLogger(__name__)
 
 
 VERIFICATION_SCHEME_NAME = "verification"
@@ -56,7 +61,7 @@ def _unique_partition_id(course):
     return generate_int_id(used_ids=used_ids)
 
 
-def _other_partitions(all_partitions, exclude_partitions):
+def _other_partitions(all_partitions, exclude_partitions, course_key):
     """todo """
     results = []
     partition_by_id = {
@@ -67,7 +72,6 @@ def _other_partitions(all_partitions, exclude_partitions):
         partition = partition_by_id[pid]
 
         # TODO -- explain
-        # TODO -- logging
         if partition.scheme.name == VERIFICATION_SCHEME_NAME:
             results.append(
                 UserPartition(
@@ -80,11 +84,24 @@ def _other_partitions(all_partitions, exclude_partitions):
                     active=False,
                 )
             )
+            log.info(
+                (
+                    "Disabled partition %s in course %s because the "
+                    "associated in-course-reverification checkpoint does not exist."
+                ),
+                partition.id, course_key
+            )
 
         # TODO -- explain
-        # TODO -- logging
         else:
             results.append(partition)
+            log.info(
+                (
+                    "Preserved partition %s in course %s becuase it is not "
+                    "using the verification partition scheme."
+                ),
+                partition.id, course_key
+            )
 
     return results
 
@@ -107,8 +124,9 @@ def _set_verification_partitions(course_key, icrv_blocks):
         if p.scheme == scheme and "location" in p.parameters
     }
 
-    partitions = [
-        UserPartition(
+    partitions = []
+    for block in icrv_blocks:
+        partition = UserPartition(
             id=partition_id_for_location.get(
                 unicode(block.location),
                 _unique_partition_id(course)
@@ -122,12 +140,23 @@ def _set_verification_partitions(course_key, icrv_blocks):
                 Group(scheme.DENY, "Deny access to content"),
             ]
         )
-        for block in icrv_blocks
-    ]
+        partitions.append(partition)
+
+        log.info(
+            (
+                "Configured partition %s for course %s using a verified partition scheme "
+                "for the in-course-reverification checkpoint at location %s"
+            ),
+            partition.id,
+            course_key,
+            partition.parameters["location"]
+        )
 
     # Preserve existing, non-verified partitions from the course
     # Mark partitions for deleted in-course reverification as disabled.
-    course.user_partitions = partitions + _other_partitions(course.user_partitions, partitions)
+    course.user_partitions = partitions + _other_partitions(course.user_partitions, partitions, course_key)
     modulestore().update_item(course, ModuleStoreEnum.UserID.system)
+
+    log.info("Saved updated partitions for the course %s", course_key)
 
     return partitions
