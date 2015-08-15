@@ -5,17 +5,27 @@
   <% for (var i = 0; i < access_info.length; i++) {
     partition = access_info[i];
   %>
-  <div class="verification-partition">
-    <input
-      type="checkbox"
-      id="partition-<%- partition.id %>"
-      name="partition-<%- partition.id %>"
-      value=""
-      <% if (partition.selected) { %>
-        checked="checked"
-      <% } %>
-    />
-    <label for="partition-<%- partition.id %>">Require verification at <%- partition.name %></label>
-  <% } %>
+  <ul class="list-fields list-input">
+    <li class="field field-checkbox checkbox-cosmetic">
+      <input
+        type="checkbox"
+        id="partition-<%- partition.id %>"
+        class="input input-checkbox"
+        name="partition-<%- partition.id %>"
+        value=""
+        <% if (partition.selected) { %>
+          checked="checked"
+        <% } %>
+      />
+
+      <label class="label" for="partition-<%- partition.id %>">
+        <i class="icon fa fa-check-square-o input-checkbox-checked"></i>
+        <i class="icon fa fa-square-o input-checkbox-unchecked"></i>
+        <%= interpolate(gettext("Require verification at %(checkpoint)s"), {checkpoint: partition.name}, true) %>
+      </label>
+
+    <% } %>
+    </li>
+  </ul>
 </div>
 </form>

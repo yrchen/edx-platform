@@ -433,7 +433,7 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
 
     VerificationAccessEditor = AbstractEditor.extend({
         templateName: 'verification-access-editor',
-        className: 'verification-access',
+        className: 'edit-verification-access',
 
         isPartitionSelected: function(id) {
             return $("#partition-" + id).is(':checked');
