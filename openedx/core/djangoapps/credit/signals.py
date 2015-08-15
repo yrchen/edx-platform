@@ -16,7 +16,7 @@ from xmodule.modulestore.django import SignalHandler
 log = logging.getLogger(__name__)
 
 
-def on_course_publish(course_key):  # pylint: disable=unused-argument
+def on_course_publish(course_key):
     """
     Will receive a delegated 'course_published' signal from cms/djangoapps/contentstore/signals.py
     and kick off a celery task to update the credit course requirements.
@@ -35,7 +35,12 @@ def on_course_publish(course_key):  # pylint: disable=unused-argument
 
 
 @receiver(SignalHandler.pre_publish)
-def on_pre_publish(sender, course_key, **kwargs):
+def on_pre_publish(sender, course_key, **kwargs):  # pylint: disable=unused-argument
+    """
+    Create user partitions for verification checkpoints.
+
+    This is a pre-publish step since we need to write to the course descriptor.
+    """
     from openedx.core.djangoapps.credit import api
     if api.is_credit_course(course_key):
         # For now, we are tagging content with in-course-reverification access groups

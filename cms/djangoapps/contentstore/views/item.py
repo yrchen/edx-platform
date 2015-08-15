@@ -757,7 +757,6 @@ def _get_module_info(xblock, rewrite_static_links=True, include_ancestor_info=Fa
         return xblock_info
 
 
-
 def create_xblock_info(xblock, data=None, metadata=None, include_ancestor_info=False, include_child_info=False,
                        course_outline=False, include_children_predicate=NEVER, parent_xblock=None, graders=None,
                        user=None):

@@ -266,6 +266,9 @@ class BulkOperationsMixin(object):
         if not bulk_ops_record.active:
             return
 
+        # Send the pre-publish signal within the context of the bulk operation.
+        # Writes performed by signal handlers will be persisted when the bulk
+        # operation ends.
         if emit_signals and bulk_ops_record.is_root:
             self.send_pre_publish_signal(bulk_ops_record, structure_key)
 
@@ -299,6 +302,9 @@ class BulkOperationsMixin(object):
         return self._get_bulk_ops_record(course_key, ignore_case).active
 
     def send_pre_publish_signal(self, bulk_ops_record, course_id):
+        """
+        Send a signal just before items are published in the course.
+        """
         signal_handler = getattr(self, "signal_handler", None)
         if signal_handler and bulk_ops_record.has_publish_item:
             signal_handler.send("pre_publish", course_key=course_id)

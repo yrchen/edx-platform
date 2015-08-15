@@ -38,11 +38,16 @@ class ReverificationService(object):
             verification attempt else None
         """
         course_key = CourseKey.from_string(course_id)
-        if (
-            not self._is_enrolled_as_verified(user_id, course_key) or
-            SkippedReverification.check_user_skipped_reverification_exists(user_id, course_key)
-        ):
+
+        # For now, treat users who aren't in the verified track the same as users
+        # who clicked the "skip" button to opt out.  The messaging makes sense in
+        # both cases.  Later, we may want to create a different state to prompt
+        # non-verified users into the payment flow.
+        if not self._is_enrolled_as_verified(user_id, course_key):
             return "skipped"
+        elif SkippedReverification.check_user_skipped_reverification_exists(user_id, course_key):
+            return "skipped"
+
         try:
             checkpoint_status = VerificationStatus.objects.filter(
                 user_id=user_id,

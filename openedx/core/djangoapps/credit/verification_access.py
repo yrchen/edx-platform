@@ -24,7 +24,7 @@ from util.db import generate_int_id
 from openedx.core.djangoapps.credit.utils import get_course_blocks
 from xmodule.modulestore.django import modulestore
 from xmodule.modulestore import ModuleStoreEnum
-from xmodule.partitions.partitions import Group, UserPartition, NoSuchUserPartitionError
+from xmodule.partitions.partitions import Group, UserPartition
 
 
 log = logging.getLogger(__name__)

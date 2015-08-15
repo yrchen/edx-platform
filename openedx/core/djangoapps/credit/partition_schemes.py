@@ -52,24 +52,23 @@ class VerificationPartitionScheme(object):
             string of allowed access group
         """
         checkpoint = user_partition.parameters['location']
-        if (
-            not is_enrolled_in_verified_mode(user, course_key) or
-            has_skipped_any_checkpoint(user, course_key) or
-            has_completed_checkpoint(user, course_key, checkpoint)
-        ):
-            # the course content tagged with given 'user_partition' is
-            # accessible/visible to the students enrolled as `verified` users
-            # and has either `skipped any ICRV` or `was denied at any ICRV
-            # (used all attempts for an ICRV but still denied by the software
-            # secure)` or `has submitted/approved verification for given ICRV`
+
+        # Decide whether the user should have access to content gated by this checkpoint.
+        # Intuitively, we allow access if the user doesn't need to do anything at the checkpoint,
+        # either because the user is in a non-verified track or the user has already submitted.
+        #
+        # Note that we do NOT wait the user's reverification attempt to be approved,
+        # since this can take some time and the user might miss an assignment deadline.
+        if not is_enrolled_in_verified_mode(user, course_key):
+            partition_group = cls.ALLOW
+        elif has_skipped_any_checkpoint(user, course_key):
+            partition_group = cls.ALLOW
+        elif has_completed_checkpoint(user, course_key, checkpoint):
             partition_group = cls.ALLOW
         else:
-            # the course content tagged with given 'user_partition' is
-            # accessible/visible to the students enrolled as `verified` users
-            # and has not yet submitted for the related ICRV
             partition_group = cls.DENY
 
-        # return matching user partition group if it exists
+        # Return matching user partition group if it exists
         try:
             return user_partition.get_group(partition_group)
         except NoSuchUserPartitionGroupError:
