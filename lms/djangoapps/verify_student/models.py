@@ -1204,15 +1204,15 @@ class VerificationStatus(models.Model):
             return None
 
     @classmethod
-    def get_user_attempts(cls, user_id, course_key, related_assessment_location):
+    def get_user_attempts(cls, user_id, course_key, checkpoint_location):
         """
         Get re-verification attempts against a user for a given 'checkpoint'
         and 'course_id'.
 
         Arguments:
-            user_id(str): User Id string
-            course_key(str): A CourseKey of a course
-            related_assessment_location(str): Verification checkpoint location
+            user_id (str): User Id string
+            course_key (str): A CourseKey of a course
+            checkpoint_location (str): Verification checkpoint location
 
         Returns:
             Count of re-verification attempts
@@ -1221,7 +1221,7 @@ class VerificationStatus(models.Model):
         return cls.objects.filter(
             user_id=user_id,
             checkpoint__course_id=course_key,
-            checkpoint__checkpoint_location=related_assessment_location,
+            checkpoint__checkpoint_location=checkpoint_location,
             status=cls.SUBMITTED_STATUS
         ).count()
 
@@ -1242,14 +1242,21 @@ class VerificationStatus(models.Model):
             return ""
 
     @classmethod
-    def check_user_has_submitted(cls, user_id, course_key, related_assessment_location):
+    def check_user_has_submitted(cls, user_id, course_key, checkpoint_location):
         """
-        TODO
+        Check whether the user has submitted anything at the checkpoint.
+
+        Arguments:
+            user_id (str): Identifier for the user.
+            course_key (CourseKey): Identifier for the course.
+            checkpoint_location (unicode): Serialized usage key of the checkpoint location.
+
+        Returns: bool
         """
         return cls.objects.filter(
             user_id=user_id,
             checkpoint__course_id=course_key,
-            checkpoint__checkpoint_location=related_assessment_location,
+            checkpoint__checkpoint_location=checkpoint_location,
         ).exists()
 
 

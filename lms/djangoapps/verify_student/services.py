@@ -119,7 +119,14 @@ class ReverificationService(object):
 
     def _is_enrolled_as_verified(self, user_id, course_key):
         """
-        TODO
+        Check whether the user is enrolled in a verified track.
+
+        Arguments:
+            user_id (str): Identifier for the user.
+            course_key (CourseKey): Identifier for the course.
+
+        Returns: bool
+
         """
         try:
             user = User.objects.get(id=user_id)

@@ -14,9 +14,8 @@ Midterm B:  |-- ALLOW --|-- DENY --|
 
 where the groups are defined as:
 
-* ALLOW: TODO
-
-* DENY: TODO
+* ALLOW: The user has access to content gated by the checkpoint.
+* DENY: The user does not have access to content gated by the checkpoint.
 
 """
 import logging

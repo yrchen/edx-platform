@@ -1,5 +1,17 @@
 """
-TODO: fix this docstring!
+Partition scheme for in-course reverification.
+
+This is responsible for placing users into one of two groups,
+ALLOW or DENY, for a partition associated with a particular
+in-course reverification checkpoint.
+
+NOTE: This really should be defined in the verify_student app,
+which owns the verification and reverification process.
+It isn't defined there now because (a) we need access to this in both Studio
+and the LMS, but verify_student is specific to the LMS, and
+(b) in-course reverification checkpoints currently have messaging that's
+specific to credit requirements.
+
 """
 
 import logging
@@ -61,7 +73,15 @@ class VerificationPartitionScheme(object):
         try:
             return user_partition.get_group(partition_group)
         except NoSuchUserPartitionGroupError:
-            # TODO -- log here
+            log.error(
+                (
+                    u"Could not find group with ID %s for verified partition "
+                    "with ID %s in course %s.  The user will not be assigned a group."
+                ),
+                partition_group,
+                user_partition.id,
+                course_key
+            )
             return None
 
 
