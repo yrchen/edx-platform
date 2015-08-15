@@ -1,5 +1,5 @@
 """
-Tests for in-course reverification access rules.
+Tests for in-course reverification user partition creation.
 
 This should really belong to the verify_student app,
 but we can't move it there because it's in the LMS and we're
@@ -27,17 +27,20 @@ from xmodule.modulestore.tests.factories import CourseFactory, ItemFactory, chec
 from xmodule.partitions.partitions import Group, UserPartition
 
 
-class VerificationAccessRuleTest(ModuleStoreTestCase):
+class CreateVerificationPartitionTest(ModuleStoreTestCase):
     """
     Tests for applying verification access rules.
     """
 
-    # TODO: explain this
+    # Run the tests in split modulestore
+    # While verification access will work in old-Mongo, it's not something
+    # we're committed to supporting, since this feature is meant for use
+    # in new courses.
     MODULESTORE = TEST_DATA_SPLIT_MODULESTORE
 
     @patch.dict(settings.FEATURES, {"ENABLE_COURSEWARE_INDEX": False})
     def setUp(self):
-        super(VerificationAccessRuleTest, self).setUp()
+        super(CreateVerificationPartitionTest, self).setUp()
 
         # Disconnect the signal receiver -- we'll invoke the update code ourselves
         SignalHandler.pre_publish.disconnect(receiver=on_pre_publish)
@@ -72,8 +75,7 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
         self.sibling_problem = ItemFactory.create(parent=self.verticals[0], category='problem')
 
     def test_creates_user_partitions(self):
-        # Transform the course by applying ICRV access rules
-        self._apply_rules()
+        self._update_partitions()
 
         # Check that a new user partition was created for the ICRV block
         self.assertEqual(len(self.course.user_partitions), 1)
@@ -94,7 +96,7 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
     @patch.dict(settings.FEATURES, {"ENABLE_COURSEWARE_INDEX": False})
     def test_removes_deleted_user_partitions(self):
         # Apply the rules to create the user partition for the checkpoint
-        self._apply_rules()
+        self._update_partitions()
 
         # Delete the reverification block, then update the access rules
         self.store.delete_item(
@@ -102,7 +104,7 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
             ModuleStoreEnum.UserID.test,
             revision=ModuleStoreEnum.RevisionOption.published_only
         )
-        self._apply_rules()
+        self._update_partitions()
 
         # Check that the user partition was marked as inactive
         self.assertEqual(len(self.course.user_partitions), 1)
@@ -112,9 +114,9 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
 
     @patch.dict(settings.FEATURES, {"ENABLE_COURSEWARE_INDEX": False})
     def test_preserves_partition_id_for_verified_partitions(self):
-        self._apply_rules()
+        self._update_partitions()
         partition_id = self.course.user_partitions[0].id
-        self._apply_rules()
+        self._update_partitions()
         new_partition_id = self.course.user_partitions[0].id
         self.assertEqual(partition_id, new_partition_id)
 
@@ -147,7 +149,7 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
 
         # Apply the verification rules.
         # The existing partitions should still be available
-        self._apply_rules()
+        self._update_partitions()
         partition_ids = [p.id for p in self.course.user_partitions]
         self.assertEqual(len(partition_ids), 3)
         self.assertIn(0, partition_ids)
@@ -165,11 +167,11 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
     def test_query_counts_with_multiple_reverification_blocks(self):
         self.fail("TODO")
 
-    def _apply_rules(self):
-        """TODO """
+    def _update_partitions(self):
+        """Update user partitions in the course descriptor, then reload the content. """
         create_verification_partitions(self.course.id)
 
-        # Reload the published version of each component to get changes
+        # Reload each component so we can see the changes
         self.course = self.store.get_course(self.course.id)
         self.sections = [self._reload_item(section.location) for section in self.sections]
         self.subsections = [self._reload_item(subsection.location) for subsection in self.subsections]
@@ -178,7 +180,7 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
         self.sibling_problem = self._reload_item(self.sibling_problem.location)
 
     def _reload_item(self, location):
-        """TODO """
+        """Safely reload an item from the moduelstore. """
         try:
             return self.store.get_item(location)
         except ItemNotFoundError:
@@ -187,7 +189,8 @@ class VerificationAccessRuleTest(ModuleStoreTestCase):
 
 class WriteOnPublishTest(ModuleStoreTestCase):
     """
-    Verify that changes are written automatically on publish.
+    Verify that updates to the course descriptor's
+    user partitions are written automatically on publish.
     """
     MODULESTORE = TEST_DATA_SPLIT_MODULESTORE
 
