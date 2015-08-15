@@ -85,7 +85,7 @@ class Group(namedtuple("Group", "id name")):
 USER_PARTITION_SCHEME_NAMESPACE = 'openedx.user_partition_scheme'
 
 
-class UserPartition(namedtuple("UserPartition", "id name description groups scheme parameters")):
+class UserPartition(namedtuple("UserPartition", "id name description groups scheme parameters active")):
     """A named way to partition users into groups, primarily intended for
     running experiments. It is expected that each user will be in at most one
     group in a partition.
@@ -105,14 +105,14 @@ class UserPartition(namedtuple("UserPartition", "id name description groups sche
     # The default scheme to be used when upgrading version 1 partitions.
     VERSION_1_SCHEME = "random"
 
-    def __new__(cls, id, name, description, groups, scheme=None, parameters=None, scheme_id=VERSION_1_SCHEME):
+    def __new__(cls, id, name, description, groups, scheme=None, parameters=None, active=True, scheme_id=VERSION_1_SCHEME):
         # pylint: disable=super-on-old-class
         if not scheme:
             scheme = UserPartition.get_scheme(scheme_id)
         if parameters is None:
             parameters = {}
 
-        return super(UserPartition, cls).__new__(cls, int(id), name, description, groups, scheme, parameters)
+        return super(UserPartition, cls).__new__(cls, int(id), name, description, groups, scheme, parameters, active)
 
     @staticmethod
     def get_scheme(name):
@@ -145,6 +145,7 @@ class UserPartition(namedtuple("UserPartition", "id name description groups sche
             "description": self.description,
             "parameters": self.parameters,
             "groups": [g.to_json() for g in self.groups],
+            "active": bool(self.active),
             "version": UserPartition.VERSION
         }
 
@@ -176,7 +177,8 @@ class UserPartition(namedtuple("UserPartition", "id name description groups sche
         else:
             raise TypeError("UserPartition dict {0} has unexpected version".format(value))
 
-        parameters = value["parameters"] if "parameters" in value else {}
+        parameters = value.get("parameters", {})
+        active = value.get("active", True)
         groups = [Group.from_json(g) for g in value["groups"]]
         scheme = UserPartition.get_scheme(scheme_id)
         if not scheme:
@@ -189,6 +191,7 @@ class UserPartition(namedtuple("UserPartition", "id name description groups sche
             groups,
             scheme,
             parameters,
+            active,
         )
 
     def get_group(self, group_id):

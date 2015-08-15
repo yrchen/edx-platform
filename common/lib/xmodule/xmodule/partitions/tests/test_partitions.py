@@ -186,7 +186,8 @@ class TestUserPartition(PartitionTestCase):
             "parameters": self.TEST_PARAMETERS,
             "groups": [group.to_json() for group in self.TEST_GROUPS],
             "version": self.user_partition.VERSION,
-            "scheme": self.TEST_SCHEME_NAME
+            "scheme": self.TEST_SCHEME_NAME,
+            "active": True,
         }
         self.assertEqual(jsonified, act_jsonified)
 
@@ -224,6 +225,7 @@ class TestUserPartition(PartitionTestCase):
         user_partition = UserPartition.from_json(jsonified)
         self.assertEqual(user_partition.scheme.name, "random")    # pylint: disable=no-member
         self.assertEqual(user_partition.parameters, {})
+        self.assertTrue(user_partition.active)
 
     def test_version_upgrade_2_to_3(self):
         # Test that version 3 user partition raises error if 'scheme' field is
@@ -267,6 +269,7 @@ class TestUserPartition(PartitionTestCase):
         }
         user_partition = UserPartition.from_json(jsonified)
         self.assertEqual(user_partition.parameters, self.TEST_PARAMETERS)
+        self.assertTrue(user_partition.active)
 
     def test_from_json_broken(self):
         # Missing field
