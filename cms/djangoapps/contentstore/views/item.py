@@ -772,6 +772,7 @@ def _get_user_partition_info(xblock):
             ]
         }
         for p in sorted(course.user_partitions, key=lambda p: p.name)
+        if p.active
     ]
 
 
