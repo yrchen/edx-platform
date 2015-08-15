@@ -245,7 +245,22 @@ function(Backbone, _, str, ModuleUtils) {
         */
        isEditableOnCourseOutline: function() {
            return this.isSequential() || this.isChapter() || this.isVertical();
-       }
+       },
+
+       /*
+        * TODO
+        */
+        hasVerifiedCheckpoints: function() {
+            var partitions = this.get("user_partitions") || [];
+
+            for (var i = 0; i < partitions.length; i++) {
+                if (partitions[i].scheme === "verification") {
+                    return true;
+                }
+            }
+
+            return false;
+        }
     });
     return XBlockInfo;
 });
