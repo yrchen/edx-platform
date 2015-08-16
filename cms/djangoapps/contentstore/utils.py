@@ -11,6 +11,7 @@ from pytz import UTC
 
 from django.conf import settings
 from django.core.urlresolvers import reverse
+from django.utils.translation import ugettext as _
 from django_comment_common.models import assign_default_role
 from django_comment_common.utils import seed_permissions_roles
 
@@ -433,7 +434,7 @@ def get_user_partition_info(xblock, schemes=None):
         for gid in missing_group_ids:
             p["groups"].append({
                 "id": gid,
-                "name": "Deleted group",
+                "name": _("Deleted group"),
                 "selected": True,
                 "deleted": True,
             })
