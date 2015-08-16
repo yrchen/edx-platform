@@ -50,12 +50,12 @@ def create_verification_partitions(course_key):
     Returns:
         None
     """
-    # Retrieve all in-course reverification blocks in the course
-    icrv_blocks = get_course_blocks(course_key, VERIFICATION_BLOCK_CATEGORY)
-
-    # Batch all the write queries we're about to do and suppress
+    # Batch all the queries we're about to do and suppress
     # the "publish" signal to avoid an infinite call loop.
     with modulestore().bulk_operations(course_key, emit_signals=False):
+
+        # Retrieve all in-course reverification blocks in the course
+        icrv_blocks = get_course_blocks(course_key, VERIFICATION_BLOCK_CATEGORY)
 
         # Update the verification definitions in the course descriptor
         # This will also clean out old verification partitions if checkpoints

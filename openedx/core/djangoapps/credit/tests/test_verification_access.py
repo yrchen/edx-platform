@@ -23,7 +23,7 @@ from xmodule.modulestore import ModuleStoreEnum
 from xmodule.modulestore.django import SignalHandler
 from xmodule.modulestore.exceptions import ItemNotFoundError
 from xmodule.modulestore.tests.django_utils import ModuleStoreTestCase, TEST_DATA_SPLIT_MODULESTORE
-from xmodule.modulestore.tests.factories import CourseFactory, ItemFactory, check_mongo_calls_range
+from xmodule.modulestore.tests.factories import CourseFactory, ItemFactory, check_mongo_calls
 from xmodule.partitions.partitions import Group, UserPartition
 
 
@@ -165,7 +165,7 @@ class CreateVerificationPartitionTest(ModuleStoreTestCase):
         self.assertIn(unicode(self.icrv.location), partition_locations)
         self.assertIn(unicode(other_icrv.location), partition_locations)
 
-        # Delete the first partition
+        # Delete the first ICRV block and update partitions
         icrv_location = self.icrv.location
         self.store.delete_item(
             self.icrv.location,
@@ -184,25 +184,43 @@ class CreateVerificationPartitionTest(ModuleStoreTestCase):
         self.assertTrue(partitions_by_loc[unicode(other_icrv.location)].active)
 
     def test_query_counts_with_no_reverification_blocks(self):
-        self.fail("TODO")
+        # Delete the ICRV block, so the number of ICRV blocks is zero
+        self.store.delete_item(
+            self.icrv.location,
+            ModuleStoreEnum.UserID.test,
+            revision=ModuleStoreEnum.RevisionOption.published_only
+        )
+
+        # 2 calls: get the course (definitions + structures)
+        # 2 calls: look up ICRV blocks in the course (definitions + structures)
+        with check_mongo_calls(num_finds=4, num_sends=2):
+            self._update_partitions(reload_items=False)
 
     def test_query_counts_with_one_reverification_block(self):
-        self.fail("TODO")
+        # One ICRV block created in the setup method
+        # Additional call to load the ICRV block
+        with check_mongo_calls(num_finds=5, num_sends=3):
+            self._update_partitions(reload_items=False)
 
     def test_query_counts_with_multiple_reverification_blocks(self):
-        self.fail("TODO")
+        # Total of two ICRV blocks (one created in setup method)
+        # Additional call to load each ICRV block
+        ItemFactory.create(parent=self.verticals[3], category='edx-reverification-block')
+        with check_mongo_calls(num_finds=6, num_sends=3):
+            self._update_partitions(reload_items=False)
 
-    def _update_partitions(self):
+    def _update_partitions(self, reload_items=True):
         """Update user partitions in the course descriptor, then reload the content. """
         create_verification_partitions(self.course.id)  # pylint: disable=no-member
 
         # Reload each component so we can see the changes
-        self.course = self.store.get_course(self.course.id)  # pylint: disable=no-member
-        self.sections = [self._reload_item(section.location) for section in self.sections]
-        self.subsections = [self._reload_item(subsection.location) for subsection in self.subsections]
-        self.verticals = [self._reload_item(vertical.location) for vertical in self.verticals]
-        self.icrv = self._reload_item(self.icrv.location)
-        self.sibling_problem = self._reload_item(self.sibling_problem.location)
+        if reload_items:
+            self.course = self.store.get_course(self.course.id)  # pylint: disable=no-member
+            self.sections = [self._reload_item(section.location) for section in self.sections]
+            self.subsections = [self._reload_item(subsection.location) for subsection in self.subsections]
+            self.verticals = [self._reload_item(vertical.location) for vertical in self.verticals]
+            self.icrv = self._reload_item(self.icrv.location)
+            self.sibling_problem = self._reload_item(self.sibling_problem.location)
 
     def _reload_item(self, location):
         """Safely reload an item from the moduelstore. """
