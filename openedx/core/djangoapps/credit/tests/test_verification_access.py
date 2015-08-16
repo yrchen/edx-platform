@@ -95,10 +95,9 @@ class CreateVerificationPartitionTest(ModuleStoreTestCase):
 
     @patch.dict(settings.FEATURES, {"ENABLE_COURSEWARE_INDEX": False})
     def test_removes_deleted_user_partitions(self):
-        # Apply the rules to create the user partition for the checkpoint
         self._update_partitions()
 
-        # Delete the reverification block, then update the access rules
+        # Delete the reverification block, then update the partitions
         self.store.delete_item(
             self.icrv.location,
             ModuleStoreEnum.UserID.test,
@@ -147,7 +146,7 @@ class CreateVerificationPartitionTest(ModuleStoreTestCase):
         ]
         self.course = self.store.update_item(self.course, ModuleStoreEnum.UserID.test)
 
-        # Apply the verification rules.
+        # Update the verification partitions.
         # The existing partitions should still be available
         self._update_partitions()
         partition_ids = [p.id for p in self.course.user_partitions]
@@ -156,7 +155,33 @@ class CreateVerificationPartitionTest(ModuleStoreTestCase):
         self.assertIn(1, partition_ids)
 
     def test_multiple_reverification_blocks(self):
-        self.fail("TODO")
+        # Add an additional ICRV block in another section
+        other_icrv = ItemFactory.create(parent=self.verticals[3], category='edx-reverification-block')
+        self._update_partitions()
+
+        # Expect that both ICRV blocks have corresponding partitions
+        self.assertEqual(len(self.course.user_partitions), 2)
+        partition_locations = [p.parameters.get("location") for p in self.course.user_partitions]
+        self.assertIn(unicode(self.icrv.location), partition_locations)
+        self.assertIn(unicode(other_icrv.location), partition_locations)
+
+        # Delete the first partition
+        icrv_location = self.icrv.location
+        self.store.delete_item(
+            self.icrv.location,
+            ModuleStoreEnum.UserID.test,
+            revision=ModuleStoreEnum.RevisionOption.published_only
+        )
+        self._update_partitions()
+
+        # Expect that the correct partition is marked as inactive
+        self.assertEqual(len(self.course.user_partitions), 2)
+        partitions_by_loc = {
+            p.parameters["location"]: p
+            for p in self.course.user_partitions
+        }
+        self.assertFalse(partitions_by_loc[unicode(icrv_location)].active)
+        self.assertTrue(partitions_by_loc[unicode(other_icrv.location)].active)
 
     def test_query_counts_with_no_reverification_blocks(self):
         self.fail("TODO")
@@ -220,8 +245,8 @@ class WriteOnPublishTest(ModuleStoreTestCase):
             self.store.publish(self.icrv.location, ModuleStoreEnum.UserID.test)
 
         # Within the test, the course pre-publish signal should have fired synchronously
-        # Since the course is marked as credit, the in-course verification access
-        # rules should have been applied.
+        # Since the course is marked as credit, the in-course verification partitions
+        # should have been created.
         # We need to verify that these changes were actually persisted to the modulestore.
         retrieved_course = self.store.get_course(self.course.id)  # pylint: disable=no-member
         self.assertEqual(len(retrieved_course.user_partitions), 1)
