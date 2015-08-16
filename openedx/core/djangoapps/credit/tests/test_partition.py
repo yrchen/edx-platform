@@ -121,26 +121,6 @@ class ReverificationPartitionTest(ModuleStoreTestCase):
                 )
             )
 
-    def test_get_group_for_user_with_skipped(self):
-        # Check that a user is in verified allow group if that user has skipped
-        # any ICRV block.
-        user = self.created_user_and_enroll('verified')
-
-        SkippedReverification.add_skipped_reverification_attempt(
-            checkpoint=self.first_checkpoint,
-            user_id=user.id,
-            course_id=self.course.id
-        )
-
-        self.assertEqual(
-            VerificationPartitionScheme.VERIFIED_ALLOW,
-            VerificationPartitionScheme.get_group_for_user(
-                self.course.id,
-                user,
-                self.user_partition
-            )
-        )
-
     def test_key_for_partition(self):
         # Test that 'key_for_partition' method of partition scheme
         # 'VerificationPartitionScheme' returns desired format for
@@ -154,3 +134,141 @@ class ReverificationPartitionTest(ModuleStoreTestCase):
                 self.checkpoint_location
             )
         )
+
+    def test_cache_with_skipped_icrv(self):
+        # Check that a user is in verified allow group if that user has skipped
+        # any ICRV block.
+        user = self.created_user_and_enroll('verified')
+        SkippedReverification.add_skipped_reverification_attempt(
+            checkpoint=self.first_checkpoint,
+            user_id=user.id,
+            course_id=self.course.id
+        )
+        # this will warm the cache.
+        with self.assertNumQueries(3):
+            self.assertEqual(
+                VerificationPartitionScheme.VERIFIED_ALLOW,
+                VerificationPartitionScheme.get_group_for_user(
+                    self.course.id,
+                    user,
+                    self.user_partition
+                )
+            )
+
+        # no db queries this time.
+        with self.assertNumQueries(0):
+            self.assertEqual(
+                VerificationPartitionScheme.VERIFIED_ALLOW,
+                VerificationPartitionScheme.get_group_for_user(
+                    self.course.id,
+                    user,
+                    self.user_partition
+                )
+            )
+
+    def test_cache_with_submitted_status(self):
+        # Check that a user is in verified allow group if that user has approved status at
+        # any ICRV block.
+        user = self.created_user_and_enroll('verified')
+        self.add_verification_status(user, VerificationStatus.APPROVED_STATUS)
+        # this will warm the cache.
+        with self.assertNumQueries(4):
+            self.assertEqual(
+                VerificationPartitionScheme.VERIFIED_ALLOW,
+                VerificationPartitionScheme.get_group_for_user(
+                    self.course.id,
+                    user,
+                    self.user_partition
+                )
+            )
+
+        # no db queries this time.
+        with self.assertNumQueries(0):
+            self.assertEqual(
+                VerificationPartitionScheme.VERIFIED_ALLOW,
+                VerificationPartitionScheme.get_group_for_user(
+                    self.course.id,
+                    user,
+                    self.user_partition
+                )
+            )
+
+    def test_cache_with_denied_status(self):
+        # Check that a user is in verified allow group if that user has denied at
+        # any ICRV block.
+        user = self.created_user_and_enroll('verified')
+        self.add_verification_status(user, VerificationStatus.DENIED_STATUS)
+
+        # this will warm the cache.
+        with self.assertNumQueries(4):
+            self.assertEqual(
+                VerificationPartitionScheme.VERIFIED_ALLOW,
+                VerificationPartitionScheme.get_group_for_user(
+                    self.course.id,
+                    user,
+                    self.user_partition
+                )
+            )
+
+        # no db queries this time.
+        with self.assertNumQueries(0):
+            self.assertEqual(
+                VerificationPartitionScheme.VERIFIED_ALLOW,
+                VerificationPartitionScheme.get_group_for_user(
+                    self.course.id,
+                    user,
+                    self.user_partition
+                )
+            )
+
+    def test_cache_with_honor(self):
+        # Check that a user is in honor mode.
+        # any ICRV block.
+        user = self.created_user_and_enroll('honor')
+        # this will warm the cache.
+        with self.assertNumQueries(3):
+            self.assertEqual(
+                VerificationPartitionScheme.NON_VERIFIED,
+                VerificationPartitionScheme.get_group_for_user(
+                    self.course.id,
+                    user,
+                    self.user_partition
+                )
+            )
+
+        # no db queries this time.
+        with self.assertNumQueries(0):
+            self.assertEqual(
+                VerificationPartitionScheme.NON_VERIFIED,
+                VerificationPartitionScheme.get_group_for_user(
+                    self.course.id,
+                    user,
+                    self.user_partition
+                )
+            )
+
+    def test_cache_with_verified_deny_group(self):
+        # Check that a user is in verified mode. But not perform any action
+
+        user = self.created_user_and_enroll('verified')
+        # this will warm the cache.
+        with self.assertNumQueries(3):
+            self.assertEqual(
+                VerificationPartitionScheme.VERIFIED_DENY,
+                VerificationPartitionScheme.get_group_for_user(
+                    self.course.id,
+                    user,
+                    self.user_partition
+                )
+            )
+
+        # no db queries this time.
+        with self.assertNumQueries(0):
+            self.assertEqual(
+                VerificationPartitionScheme.VERIFIED_DENY,
+                VerificationPartitionScheme.get_group_for_user(
+                    self.course.id,
+                    user,
+                    self.user_partition
+                )
+            )
