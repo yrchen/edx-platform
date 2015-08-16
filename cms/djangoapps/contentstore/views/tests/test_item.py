@@ -334,25 +334,27 @@ class GetItemTest(ItemTest):
 
         # Check that the partition and group information was returned
         result = json.loads(resp.content)
-        self.assertEqual(result["user_partitions"], {
-            "id": 0,
-            "name": "Verification user partition",
-            "scheme": "verification",
-            "groups": [
-                {
-                    "id": 0,
-                    "name": "Group A",
-                    "selected": False,
-                    "deleted": False,
-                },
-                {
-                    "id": 1,
-                    "name": "Group B",
-                    "selected": False,
-                    "deleted": False,
-                },
-            ]
-        })
+        self.assertEqual(result["user_partitions"], [
+            {
+                "id": 0,
+                "name": "Verification user partition",
+                "scheme": "verification",
+                "groups": [
+                    {
+                        "id": 0,
+                        "name": "Group A",
+                        "selected": False,
+                        "deleted": False,
+                    },
+                    {
+                        "id": 1,
+                        "name": "Group B",
+                        "selected": False,
+                        "deleted": False,
+                    },
+                ]
+            }
+        ])
         self.assertEqual(result["group_access"], {})
 
 
