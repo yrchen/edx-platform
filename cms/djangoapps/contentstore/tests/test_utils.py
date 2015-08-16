@@ -569,9 +569,9 @@ class GetUserPartitionInfoTest(ModuleStoreTestCase):
             ),
             UserPartition(
                 id=1,
-                name="Random user partition",
+                name="Verification user partition",
                 scheme=UserPartition.get_scheme("verification"),
-                description="Random user partition",
+                description="Verification user partition",
                 groups=[
                     Group(id=0, name="Group C"),
                 ],
@@ -596,9 +596,9 @@ class GetUserPartitionInfoTest(ModuleStoreTestCase):
             ),
             UserPartition(
                 id=1,
-                name="Random user partition",
+                name="Verification user partition",
                 scheme=UserPartition.get_scheme("verification"),
-                description="Random user partition",
+                description="Verification user partition",
                 groups=[
                     Group(id=0, name="Group C"),
                 ],

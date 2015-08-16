@@ -334,7 +334,7 @@ def has_active_web_certificate(course):
     return cert_config
 
 
-def get_user_partition_info(xblock, schemes=None):
+def get_user_partition_info(xblock, schemes=None, course=None):
     """
     Retrieve user partition information for an XBlock for display in editors.
 
@@ -349,6 +349,10 @@ def get_user_partition_info(xblock, schemes=None):
     Keyword Arguments:
         schemes (iterable of str): If provided, filter partitions to include only
             schemes with the provided names.
+
+        course (XBlock): The course descriptor.  If provided, uses this to look up the user partitions
+            instead of loading the course.  This is useful if we're calling this function multiple
+            times for the same course want to minimize queries to the modulestore.
 
     Returns: list
 
@@ -390,7 +394,9 @@ def get_user_partition_info(xblock, schemes=None):
     ]
 
     """
-    course = modulestore().get_course(xblock.location.course_key)
+    if course is None:
+        course = modulestore().get_course(xblock.location.course_key)
+
     if course is None:
         log.warning(
             "Could not find course %s to retrieve user partition information",
