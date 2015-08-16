@@ -91,7 +91,7 @@ is_staff_locked = ancestor_has_staff_lock(xblock)
                                         ## For cohorts, we show deleted groups so the user can remove them.
                                         ## For verification, we don't bother, since the user can't delete groups (allow/deny).
                                         % if partition["scheme"] == "cohort" and group["deleted"]:
-                                            <label for="visibility-content-group-${partition["id"]}-${group_id}" class="label">
+                                            <label for="visibility-content-group-${partition["id"]}-${group["id"]}" class="label">
                                                 ${_('Deleted Content Group')}
                                                 <span class="note">${_('Content group no longer exists. Please choose another or allow access to All Students and staff')}</span>
                                             </label>
