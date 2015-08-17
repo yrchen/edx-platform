@@ -19,7 +19,9 @@ import logging
 
 from course_modes.models import CourseMode
 from lms.djangoapps.verify_student.models import SkippedReverification, VerificationStatus
+from openedx.core.djangoapps.credit.verification_access import VERIFICATION_BLOCK_CATEGORY
 from student.models import CourseEnrollment
+from xmodule.modulestore.draft_and_published import DIRECT_ONLY_CATEGORIES
 from xmodule.partitions.partitions import NoSuchUserPartitionGroupError
 
 
@@ -39,35 +41,54 @@ class VerificationPartitionScheme(object):
     ALLOW = 1
 
     @classmethod
-    def get_group_for_user(cls, course_key, user, user_partition):
-        """
-        Return the user's group depending their enrollment and verification
+    def get_group_for_user(cls, course_key, user, user_partition, descriptor=None):
+        """ Return the user's group depending their enrollment and verification
         status.
 
         Args:
             course_key(CourseKey): CourseKey
             user(User): user object
             user_partition: location object
+            descriptor (xblock): xblock mixin object
 
         Returns:
             string of allowed access group
+
         """
-        checkpoint = user_partition.parameters['location']
+        partition_group = None
+        if descriptor is not None:
+            if descriptor.location.category in DIRECT_ONLY_CATEGORIES:
+                # show this module if it's in the list of direct only categories
+                partition_group = cls.ALLOW
 
-        # Retrieve all information we need to determine the user's group
-        # as a multi-get from the cache.
-        is_verified, has_skipped, has_completed = _get_user_statuses(user, course_key, checkpoint)
+            if descriptor.location.category == VERIFICATION_BLOCK_CATEGORY:
+                # always show ICRV module
+                partition_group = cls.ALLOW
 
-        # Decide whether the user should have access to content gated by this checkpoint.
-        # Intuitively, we allow access if the user doesn't need to do anything at the checkpoint,
-        # either because the user is in a non-verified track or the user has already submitted.
-        #
-        # Note that we do NOT wait the user's reverification attempt to be approved,
-        # since this can take some time and the user might miss an assignment deadline.
-        partition_group = (
-            cls.ALLOW if not is_verified or has_skipped or has_completed
-            else cls.DENY
-        )
+            elif descriptor.has_children and any(
+                child.category == VERIFICATION_BLOCK_CATEGORY for child in descriptor.children
+            ):
+                # show this module if any of it's children have the category of
+                # ICRV
+                partition_group = cls.ALLOW
+
+        if partition_group is None:
+            checkpoint = user_partition.parameters['location']
+
+            # Retrieve all information we need to determine the user's group
+            # as a multi-get from the cache.
+            is_verified, has_skipped, has_completed = _get_user_statuses(user, course_key, checkpoint)
+
+            # Decide whether the user should have access to content gated by this checkpoint.
+            # Intuitively, we allow access if the user doesn't need to do anything at the checkpoint,
+            # either because the user is in a non-verified track or the user has already submitted.
+            #
+            # Note that we do NOT wait the user's reverification attempt to be approved,
+            # since this can take some time and the user might miss an assignment deadline.
+            partition_group = (
+                cls.ALLOW if not is_verified or has_skipped or has_completed
+                else cls.DENY
+            )
 
         # Return matching user partition group if it exists
         try:

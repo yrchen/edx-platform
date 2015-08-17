@@ -527,6 +527,7 @@ def _has_group_access(descriptor, user, course_key):
             course_key,
             user,
             partition,
+            descriptor,
         )
 
     # finally: check that the user has a satisfactory group assignment
