@@ -561,9 +561,6 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
 
                 editors.push(StaffLockEditor);
 
-                if (xblockInfo.hasVerifiedCheckpoints()) {
-                    editors.push(VerificationAccessEditor);
-                }
             } else if (xblockInfo.isVertical()) {
                 editors = [StaffLockEditor];
 
