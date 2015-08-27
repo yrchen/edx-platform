@@ -6,6 +6,7 @@
             'codemirror': 'xmodule_js/common_static/js/vendor/CodeMirror/codemirror',
             'jquery': 'xmodule_js/common_static/js/vendor/jquery.min',
             'jquery.ui': 'xmodule_js/common_static/js/vendor/jquery-ui.min',
+            'jquery.ui.selectable': 'xmodule_js/common_static/js/vendor/jquery-ui.selectable.min',
             'jquery.flot': 'xmodule_js/common_static/js/vendor/flot/jquery.flot.min',
             'jquery.form': 'xmodule_js/common_static/js/vendor/jquery.form',
             'jquery.markitup': 'xmodule_js/common_static/js/vendor/markitup/jquery.markitup',

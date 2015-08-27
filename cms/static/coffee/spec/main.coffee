@@ -5,6 +5,7 @@ requirejs.config({
         "codemirror": "xmodule_js/common_static/js/vendor/CodeMirror/codemirror",
         "jquery": "xmodule_js/common_static/js/vendor/jquery.min",
         "jquery.ui": "xmodule_js/common_static/js/vendor/jquery-ui.min",
+        "jquery.ui.selectable": "xmodule_js/common_static/js/vendor/jquery-ui.selectable.min",
         "jquery.form": "xmodule_js/common_static/js/vendor/jquery.form",
         "jquery.markitup": "xmodule_js/common_static/js/vendor/markitup/jquery.markitup",
         "jquery.leanModal": "xmodule_js/common_static/js/vendor/jquery.leanModal.min",
