@@ -373,3 +373,14 @@ if FEATURES.get('ENABLE_THIRD_PARTY_AUTH'):
 
     # third_party_auth config moved to ConfigurationModels. This is for data migration only:
     THIRD_PARTY_AUTH_OLD_CONFIG = AUTH_TOKENS.get('THIRD_PARTY_AUTH', None)
+
+########## django-sudo ##########
+if FEATURES.get('ENABLE_DJANGO_SUDO', False):
+    # force re-authentication before activating administrative functions
+    MIDDLEWARE_CLASSES += ('sudo.middleware.SudoMiddleware',)
+
+    # Allows sudo-mode
+    INSTALLED_APPS += (
+        'sudo',
+        'django_sudo_helpers'
+    )

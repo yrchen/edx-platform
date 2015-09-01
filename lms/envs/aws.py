@@ -711,3 +711,14 @@ JWT_EXPIRATION = ENV_TOKENS.get('JWT_EXPIRATION', JWT_EXPIRATION)
 
 PROCTORING_BACKEND_PROVIDER = AUTH_TOKENS.get("PROCTORING_BACKEND_PROVIDER", PROCTORING_BACKEND_PROVIDER)
 PROCTORING_SETTINGS = ENV_TOKENS.get("PROCTORING_SETTINGS", PROCTORING_SETTINGS)
+
+########## django-sudo ##########
+if FEATURES.get('ENABLE_DJANGO_SUDO', False):
+    # force re-authentication before activating administrative functions
+    MIDDLEWARE_CLASSES += ('sudo.middleware.SudoMiddleware',)
+
+    # Allows sudo-mode
+    INSTALLED_APPS += (
+        'sudo',
+        'django_sudo_helpers'
+    )

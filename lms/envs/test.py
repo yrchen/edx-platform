@@ -530,3 +530,17 @@ AUTHENTICATION_BACKENDS += ('lti_provider.users.LtiBackend',)
 
 # ORGANIZATIONS
 FEATURES['ORGANIZATIONS_APP'] = True
+
+######### Django-sudo ##########
+FEATURES['ENABLE_DJANGO_SUDO'] = True
+
+########## django-sudo ##########
+if FEATURES.get('ENABLE_DJANGO_SUDO', False):
+    # force re-authentication before activating administrative functions
+    MIDDLEWARE_CLASSES += ('sudo.middleware.SudoMiddleware',)
+
+    # Allows sudo-mode
+    INSTALLED_APPS += (
+        'sudo',
+        'django_sudo_helpers'
+    )
