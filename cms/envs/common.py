@@ -333,7 +333,7 @@ MIDDLEWARE_CLASSES = (
 )
 
 # Clickjacking protection can be enabled by setting this to 'DENY'
-X_FRAME_OPTIONS = 'ALLOW'
+X_FRAME_OPTIONS = 'SAMEORIGIN'
 
 ############# XBlock Configuration ##########
 

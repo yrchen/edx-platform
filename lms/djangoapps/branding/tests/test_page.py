@@ -86,9 +86,9 @@ class AnonymousIndexPageTest(ModuleStoreTestCase):
         Check the x-frame-option response header
         """
 
-        # check to see that the default setting is to ALLOW iframing
+        # check to see that the default setting is to use SAMEORIGIN iframing
         resp = self.client.get('/')
-        self.assertEquals(resp['X-Frame-Options'], 'ALLOW')
+        self.assertEquals(resp['X-Frame-Options'], 'SAMEORIGIN')
 
     @override_settings(X_FRAME_OPTIONS='DENY')
     def test_deny_x_frame_options(self):
