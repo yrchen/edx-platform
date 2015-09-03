@@ -68,8 +68,9 @@ describe "DiscussionThreadView", ->
             view = createDiscussionThreadView()
             waitsFor (->
                 article = view.$el.find('.discussion-article')[0]
-                # expect(article).toBeFocused()
-                return article == article.ownerDocument.activeElement
+                console.log article
+                expect(article).toBeEqualTo(document.activeElement)
+                # return article == document.activeElement
                 # See https://github.com/edx/edx-platform/pull/9067/files#diff-b24b2c5f113e3017abbd8c3fe833f834R39
             ), "conversation did not receive focus", 5000
 
