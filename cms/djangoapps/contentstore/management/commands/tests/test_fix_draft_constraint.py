@@ -48,8 +48,8 @@ class TestFixDraftConstraint(SharedModuleStoreTestCase):
         if commit:
             args.append('commit')
 
-        with self.assert_branch_unchanged(self.split_store, course, ModuleStoreEnum.RevisionOption.draft_only):
-            with self.assert_branch_unchanged(self.split_store, course, ModuleStoreEnum.RevisionOption.published_only):
+        with self.assert_branch_unchanged(self.split_store, course, ModuleStoreEnum.RevisionOption.published_only):
+            with self.assert_branch_unchanged(self.split_store, course, ModuleStoreEnum.RevisionOption.draft_only):
                 call_command(*args)
 
 
@@ -106,6 +106,13 @@ class TestFixDraftConstraint(SharedModuleStoreTestCase):
             parent_location=course.location,
             category="sequential",
         )
+        orphan_html = cls.split_store.create_item(
+            ModuleStoreEnum.UserID.mgmt_command,
+            course.id,
+            'html',
+            "OrphanHtml"
+        )
+        cls.split_store.publish(orphan_html.location, ModuleStoreEnum.UserID.mgmt_command)
 
         # pylint: disable=protected-access
         draft_location = cls.split_store._map_revision_to_branch(
@@ -122,14 +129,9 @@ class TestFixDraftConstraint(SharedModuleStoreTestCase):
             draft_location, draft_structure, ModuleStoreEnum.UserID.mgmt_command
         )
 
-        draft_item_block_keys = [
-            block_key for block_key in new_draft_structure['blocks']
-            if block_key.id == item.location.block_id
-        ]
-
-        assert len(draft_item_block_keys) == 1
-
-        draft_item_block_key = draft_item_block_keys[0]
+        draft_item_block_key = {
+            block_key.id: block_key for block_key in new_draft_structure['blocks']
+        }[orphan_html.location.block_id]
 
         del new_draft_structure['blocks'][draft_item_block_key]
 
@@ -169,3 +171,17 @@ class TestFixDraftConstraint(SharedModuleStoreTestCase):
         )
         self.assertEqual(location, new_location)
         self.assertEqual(structure, new_structure)
+
+    @SharedModuleStoreTestCase.modifies_courseware
+    def test_delete_orphans(self):
+        course_id = unicode(self.course_does_not_satisfy.id)
+        with self.assertRaises(ValueError):
+            call_command('delete_orphans', course_id, 'commit')
+
+    @SharedModuleStoreTestCase.modifies_courseware
+    def test_delete_orphans_2(self):
+        course_id = unicode(self.course_does_not_satisfy.id)
+        call_command('fix_draft_constraint', course_id, 'commit')
+        call_command('delete_orphans', course_id, 'commit')
+
+

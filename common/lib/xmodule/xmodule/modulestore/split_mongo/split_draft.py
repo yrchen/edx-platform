@@ -314,11 +314,11 @@ class DraftVersioningModuleStore(SplitMongoModuleStore, ModuleStoreDraftAndPubli
             to include those missing blocks
         """
 
-        draft_location = self._map_revision_to_branch(
-            course_key, ModuleStoreEnum.RevisionOption.draft_only
-        )
         published_location = self._map_revision_to_branch(
             course_key, ModuleStoreEnum.RevisionOption.published_only
+        )
+        draft_location = self._map_revision_to_branch(
+            course_key, ModuleStoreEnum.RevisionOption.draft_only
         )
 
         draft_structure = self._lookup_course(draft_location).structure

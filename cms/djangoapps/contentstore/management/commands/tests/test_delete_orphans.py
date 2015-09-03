@@ -11,7 +11,7 @@ class TestDeleteOrphan(TestOrphanBase):
     """
     def setUp(self):
         super(TestDeleteOrphan, self).setUp()
-        self.course_id = self.course.id.to_deprecated_string()
+        self.course_id = unicode(self.course.id)
 
     def test_delete_orphans_no_commit(self):
         """
