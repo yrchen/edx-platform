@@ -64,19 +64,6 @@ describe "DiscussionThreadView", ->
 
             view
 
-        checkForTopicFocus = () ->
-            view = createDiscussionThreadView()
-            waitsFor (->
-                article = view.$el.find('.discussion-article')[0]
-                console.log article
-                expect(article).toBeEqualTo(document.activeElement)
-                # return article == document.activeElement
-                # See https://github.com/edx/edx-platform/pull/9067/files#diff-b24b2c5f113e3017abbd8c3fe833f834R39
-            ), "conversation did not receive focus", 5000
-
-        it "sends focus to the conversation when opened", ->
-            checkForTopicFocus()
-
         checkCommentForm = (originallyClosed, mode) ->
             view = createDiscussionThreadView(originallyClosed, mode)
             expect(view.$('.comment-form').closest('li').is(":visible")).toBe(not originallyClosed)
@@ -171,6 +158,19 @@ describe "DiscussionThreadView", ->
                 @view.render()
                 expect($.ajax).not.toHaveBeenCalled()
                 expect(@view.$el.find(".responses li").length).toEqual(0)
+
+        describe "focus", ->
+            it "sends focus to the conversation when opened", ->
+                spyOn($.fn, "focus").andCallThrough();
+                # view = createDiscussionThreadView()
+                article = @view.$el.find('.discussion-article')
+                waitsFor (->
+                    @view.render()
+                    console.log @view
+                    expect(article.focus).toHaveBeenCalled();
+                    # return article == document.activeElement
+                    # See https://github.com/edx/edx-platform/pull/9067/files#diff-b24b2c5f113e3017abbd8c3fe833f834R39
+                ), "conversation did not receive focus", 5000
 
         describe "expand/collapse", ->
             it "shows/hides appropriate content", ->
