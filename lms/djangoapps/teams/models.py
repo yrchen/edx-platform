@@ -189,7 +189,7 @@ class CourseTeamMembership(models.Model):
         self.team.reset_team_size()  # pylint: disable=no-member
 
     @classmethod
-    def get_memberships(cls, username=None, course_ids=None, team_id=None):
+    def get_memberships(cls, username=None, course_ids=None, team_id=None, prefetch_related=None):
         """
         Get a queryset of memberships.
 
@@ -205,6 +205,10 @@ class CourseTeamMembership(models.Model):
             queryset = queryset.filter(team__course_id__in=course_ids)
         if team_id is not None:
             queryset = queryset.filter(team__team_id=team_id)
+
+        queryset = queryset.prefetch_related('user').prefetch_related('team')
+
+        print ''
 
         return queryset
 
