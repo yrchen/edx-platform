@@ -59,7 +59,6 @@
   .wrapper-collection {
     @extend %ui-window;
     position: relative;
-    outline: none;
 
     &:hover .collection .actions {
       opacity: 1.0;
