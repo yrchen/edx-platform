@@ -723,7 +723,6 @@ class BrowseTeamsWithinTopicTest(TeamsTabBase):
         events = [{
             'event_type': 'edx.team.searched',
             'event': {
-                'course_id': self.course_id,
                 'search_text': search_text,
                 'topic_id': self.topic['id'],
                 'number_of_results': 0
@@ -930,15 +929,11 @@ class CreateTeamTest(TeamFormActions):
 
         expected_events = [
             {
-                'event_type': 'edx.team.created',
-                'event': {
-                    'course_id': self.course_id,
-                }
+                'event_type': 'edx.team.created'
             },
             {
                 'event_type': 'edx.team.learner_added',
                 'event': {
-                    'course_id': self.course_id,
                     'add_method': 'added_on_create',
                 }
             }
@@ -1047,7 +1042,6 @@ class EditTeamTest(TeamFormActions):
             {
                 'event_type': 'edx.team.changed',
                 'event': {
-                    'course_id': self.course_id,
                     'team_id': self.team['id'],
                     'field': 'country',
                     'old': 'AF',
@@ -1058,7 +1052,6 @@ class EditTeamTest(TeamFormActions):
             {
                 'event_type': 'edx.team.changed',
                 'event': {
-                    'course_id': self.course_id,
                     'team_id': self.team['id'],
                     'field': 'name',
                     'old': self.team['name'],
@@ -1069,7 +1062,6 @@ class EditTeamTest(TeamFormActions):
             {
                 'event_type': 'edx.team.changed',
                 'event': {
-                    'course_id': self.course_id,
                     'team_id': self.team['id'],
                     'field': 'language',
                     'old': 'aa',
@@ -1080,7 +1072,6 @@ class EditTeamTest(TeamFormActions):
             {
                 'event_type': 'edx.team.changed',
                 'event': {
-                    'course_id': self.course_id,
                     'team_id': self.team['id'],
                     'field': 'description',
                     'old': self.team['description'],
@@ -1424,7 +1415,6 @@ class TeamPageTest(TeamsTabBase):
             {
                 'event_type': 'edx.team.learner_added',
                 'event': {
-                    'course_id': self.course_id,
                     'add_method': 'joined_from_team_view'
                 }
             }
@@ -1503,7 +1493,6 @@ class TeamPageTest(TeamsTabBase):
             {
                 'event_type': 'edx.team.learner_removed',
                 'event': {
-                    'course_id': self.course_id,
                     'remove_method': 'self_removal'
                 }
             }

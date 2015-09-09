@@ -38,6 +38,7 @@ from opaque_keys.edx.keys import CourseKey
 
 from courseware.courses import get_course_with_access, has_access
 from eventtracking import tracker
+from track import contexts
 from student.models import CourseEnrollment, CourseAccessRole
 from student.roles import CourseStaffRole
 from django_comment_client.utils import has_discussion_privileges
@@ -62,6 +63,16 @@ TOPICS_PER_PAGE = 12
 MAXIMUM_SEARCH_SIZE = 100000
 
 
+def emit_team_event(event_name, course_key, event_data):
+    """
+    Emit team events with the correct course id context.
+    """
+    context = contexts.course_context_from_course_id(course_key)
+
+    with tracker.get_tracker().context(event_name, context):
+        tracker.emit(event_name, event_data)
+
+
 @receiver(post_save, sender=CourseTeam)
 def team_post_save_callback(sender, instance, **kwargs):  # pylint: disable=unused-argument
     """ Emits signal after the team is saved. """
@@ -72,11 +83,11 @@ def team_post_save_callback(sender, instance, **kwargs):  # pylint: disable=unus
             if field not in instance.FIELD_BLACKLIST:
                 truncated_fields = truncate_fields(unicode(changed_fields[field]), unicode(getattr(instance, field)))
                 truncated_fields['team_id'] = instance.team_id
-                truncated_fields['course_id'] = unicode(instance.course_id)
                 truncated_fields['field'] = field
 
-                tracker.emit(
+                emit_team_event(
                     'edx.team.changed',
+                    instance.course_id,
                     truncated_fields
                 )
 
@@ -367,11 +378,10 @@ class TeamsListView(ExpandableFieldViewMixin, GenericAPIView):
                 self.get_page()
             )
             serializer = self.get_pagination_serializer(paginated_results)
-            tracker.emit('edx.team.searched', {
+            emit_team_event('edx.team.searched', course_key, {
                 "number_of_results": search_results['total'],
                 "search_text": text_search,
                 "topic_id": topic_id,
-                "course_id": course_id_string,
             })
         else:
             queryset = CourseTeam.objects.filter(**result_filter)
@@ -445,19 +455,18 @@ class TeamsListView(ExpandableFieldViewMixin, GenericAPIView):
             }, status=status.HTTP_400_BAD_REQUEST)
         else:
             team = serializer.save()
-            tracker.emit('edx.team.created', {
-                'team_id': team.team_id,
-                'course_id': unicode(course_id)
+            emit_team_event('edx.team.created', course_key, {
+                'team_id': team.team_id
             })
             if not team_administrator:
                 # Add the creating user to the team.
                 team.add_user(request.user)
-                tracker.emit(
+                emit_team_event(
                     'edx.team.learner_added',
+                    course_key,
                     {
                         'team_id': team.team_id,
                         'user_id': request.user.id,
-                        'course_id': unicode(team.course_id),
                         'add_method': 'added_on_create'
                     }
                 )
@@ -1015,12 +1024,12 @@ class MembershipListView(ExpandableFieldViewMixin, GenericAPIView):
 
         try:
             membership = team.add_user(user)
-            tracker.emit(
+            emit_team_event(
                 'edx.team.learner_added',
+                team.course_id,
                 {
                     'team_id': team.team_id,
                     'user_id': user.id,
-                    'course_id': unicode(team.course_id),
                     'add_method': 'joined_from_team_view' if user == request.user else 'added_by_another_user'
                 }
             )
@@ -1150,11 +1159,11 @@ class MembershipDetailView(ExpandableFieldViewMixin, GenericAPIView):
         if has_team_api_access(request.user, team.course_id, access_username=username):
             membership = self.get_membership(username, team)
             membership.delete()
-            tracker.emit(
+            emit_team_event(
                 'edx.team.learner_removed',
+                team.course_id,
                 {
                     'team_id': team.team_id,
-                    'course_id': unicode(team.course_id),
                     'user_id': membership.user.id,
                     'remove_method': 'self_removal' if membership.user == request.user else 'removed_by_admin'
                 }
