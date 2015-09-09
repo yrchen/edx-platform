@@ -58,7 +58,7 @@
 // app - discussion
 @import "discussion/utilities/variables";
 @import "discussion/mixins";
-@import 'discussion/discussion'; // Process old file after definitions but before everything else
+@import 'discussion/discussion'; // Process old file after definitions but before everything else, partial is deprecated.
 @import "discussion/elements/actions";
 @import "discussion/elements/editor";
 @import "discussion/elements/labels";

@@ -25,14 +25,11 @@ body.discussion, .discussion-module {
 
     .post-header-content {
       display: inline-block;
-      width: calc(flex-grid(9,12) - $post-image-dimension);
-      // width: flex-grid(9,12);
+      width: flex-grid(9,12); 
     }
 
     .post-header-actions {
       @include float(right);
-      display: inline-block;
-      vertical-align: middle;
       width: flex-grid(3,12);
     }
   }
@@ -44,15 +41,14 @@ body.discussion, .discussion-module {
     .response-header-content {
       display: inline-block;
       vertical-align: top;
-      width: calc((flex-grid(11,12)) - $response-image-dimension);
-      // width: flex-grid(11,12);
+      width: flex-grid(11,12);
     }
 
     .response-header-actions {
-      position: absolute;
-      @include right($baseline);
-      top: ($baseline);
       @include float(right);
+      @include right($baseline);
+      position: absolute;
+      top: ($baseline);
     }
   }
 
@@ -60,11 +56,10 @@ body.discussion, .discussion-module {
   .discussion-comment {
 
     .response-body {
+      @extend %t-copy-sub2;
       display: inline-block;
       margin-bottom: ($baseline/2);
-      width: calc((flex-grid(11,12)) - $comment-image-dimension);
-      //width: flex-grid(10,12);
-      font-size: 13px;
+      width: flex-grid(10,12);
 
       p + p {
         margin-top: 12px;
@@ -72,9 +67,7 @@ body.discussion, .discussion-module {
     }
 
     .comment-actions-list {
-      display: inline-block;
-      width: flex-grid(2,12);
-      vertical-align: top;
+      @include float(right);
     }
 
     .posted-details {
@@ -94,14 +87,19 @@ body.discussion, .discussion-module {
 body.discussion {
 
   .discussion-post, .discussion-response, .discussion-comment {
+    @include clearfix();
     
     // thread - images
     .author-image {
       @include margin-right($baseline/2);
       display: inline-block;
       background-color: $gray-l4;
-      border-radius: 3px;
       vertical-align: top; 
+
+      // STATE: No profile image 
+      &:empty {
+        display: none;
+      }
 
       // CASE: post image
       &.level-post {
@@ -119,6 +117,10 @@ body.discussion {
       &.level-comment {
         height: $comment-image-dimension;
         width: $comment-image-dimension;
+      }
+
+      img {
+        border-radius: 3px;
       }
     }
 
@@ -138,11 +140,15 @@ body.discussion {
       }
     }
   }
+
+  .discussion-post .post-body, .discussion-response .response-body {
+    @include padding-right($baseline); //ensures content doesn't overlap on post or response actions.
+  }
 }
 
 // +post - individual element styling
-body.discussion .discussion-post {
-  // TO-DO: review inline discussions to ensure removing .discussion-mobile between the two classes above is ok. 
+body.discussion .discussion-post, body.discussion .discussion-article {
+  // NOTE: discussion-article is used for inline discussion modules.
   @include clearfix();
 
   .post-header-content {
@@ -154,8 +160,6 @@ body.discussion .discussion-post {
       margin-bottom: ($baseline/4);
       letter-spacing: 0;
     }
-
-    // post labels
   }
 
   // post body
