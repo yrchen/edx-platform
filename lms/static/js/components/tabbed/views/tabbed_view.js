@@ -4,11 +4,32 @@
             'underscore',
             'jquery',
             'text!templates/components/tabbed/tabbed_view.underscore',
-            'text!templates/components/tabbed/tab.underscore'],
-           function (Backbone, _, $, tabbedViewTemplate, tabTemplate) {
+            'text!templates/components/tabbed/tab.underscore',
+            'text!templates/components/tabbed/tabpanel.underscore',
+           ], function (
+               Backbone,
+               _,
+               $,
+               tabbedViewTemplate,
+               tabTemplate,
+               tabPanelTemplate
+           ) {
+               var TabPanelView = Backbone.View.extend({
+                   template: _.template(tabPanelTemplate),
+                   initialize: function (options) {
+                       this.tabInfo = options.tabInfo;
+                   },
+                   render: function () {
+                       var tabPanelHtml = this.template({tabId: this.tabInfo.url});
+                       this.setElement($(tabPanelHtml));
+                       this.$el.append(this.tabInfo.view.render().el);
+                       return this;
+                   }
+               });
+
                var TabbedView = Backbone.View.extend({
                    events: {
-                       'click .nav-item[role="tab"]': 'switchTab'
+                       'click .nav-item.tab': 'switchTab'
                    },
 
                    template: _.template(tabbedViewTemplate),
@@ -31,6 +52,10 @@
                    initialize: function (options) {
                        this.router = options.router || null;
                        this.tabs = options.tabs;
+                       // Convert each view into a TabPanelView
+                       _.each(this.tabs, function (tabInfo) {
+                           tabInfo.tabPanelView = new TabPanelView({tabInfo: tabInfo});
+                       }, this);
                        this.urlMap = _.reduce(this.tabs, function (map, value) {
                            map[value.url] = value;
                            return map;
@@ -41,13 +66,21 @@
                        var self = this;
                        this.$el.html(this.template({}));
                        _.each(this.tabs, function(tabInfo, index) {
-                           var tabEl = $(_.template(tabTemplate, {
-                               index: index,
-                               title: tabInfo.title,
-                               url: tabInfo.url
-                           }));
+                           var tabId = tabInfo.url,
+                               tabEl = $(_.template(tabTemplate, {
+                                   index: index,
+                                   title: tabInfo.title,
+                                   url: tabInfo.url,
+                                   tabPanelId: tabId
+                               })),
+                               tabContainerEl = this.$('.tabs');
                            self.$('.page-content-nav').append(tabEl);
-                       });
+
+                           // Handle tab panels
+                           if (!$.contains(tabContainerEl[0], tabInfo.tabPanelView.el)) {
+                               tabContainerEl.append(tabInfo.tabPanelView.render().$el);
+                           }
+                       }, this);
                        // Re-display the default (first) tab if the
                        // current route does not belong to one of the
                        // tabs.  Otherwise continue displaying the tab
@@ -62,11 +95,17 @@
                        var tabMeta = this.getTabMeta(index),
                            tab = tabMeta.tab,
                            tabEl = tabMeta.element,
-                           view = tab.view;
-                       this.$('a.is-active').removeClass('is-active').attr('aria-selected', 'false');
-                       tabEl.addClass('is-active').attr('aria-selected', 'true');
-                       view.setElement(this.$('.page-content-main')).render();
-                       this.$('.sr-is-focusable.sr-tab').focus();
+                           view = tab.tabPanelView;
+                       // Hide old tab/tabpanel
+                       this.$('button.is-active').removeClass('is-active').attr('aria-expanded', 'false');
+                       this.$('.tabpanel[aria-expanded="true"]').attr('aria-expanded', 'false').addClass('is-hidden');
+                       // Show new tab/tabpanel
+                       tabEl.addClass('is-active').attr('aria-expanded', 'true');
+                       view.$el.attr('aria-expanded', 'true').removeClass('is-hidden');
+                       // This bizarre workaround makes focus work in Chrome.
+                       _.defer(function () {
+                           view.$('.sr-is-focusable.' + tab.url).focus();
+                       });
                        if (this.router) {
                            this.router.navigate(tab.url, {replace: true});
                        }
@@ -85,10 +124,10 @@
                        var tab, element;
                        if (typeof tabNameOrIndex === 'string') {
                            tab = this.urlMap[tabNameOrIndex];
-                           element = this.$('a[data-url='+tabNameOrIndex+']');
+                           element = this.$('button[data-url='+tabNameOrIndex+']');
                        }  else {
                            tab = this.tabs[tabNameOrIndex];
-                           element = this.$('a[data-index='+tabNameOrIndex+']');
+                           element = this.$('button[data-index='+tabNameOrIndex+']');
                        }
                        return {'tab': tab, 'element': element};
                    }
