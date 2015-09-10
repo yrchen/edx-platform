@@ -26,11 +26,40 @@ define(["jquery", "underscore", "gettext", "js/views/modals/base_modal", "jquery
                 BaseModal.prototype.addActionButtons.call(this);
             },
 
+            loadImageFile: function (file, callback) {
+                // Load an image file.
+                var image = new Image();
+                image.onload = function() { callback(image) };
+                image.src = URL.createObjectURL(file);
+            },
+
             renderContents: function() {
-                var isValid = this.model.isValid(),
-                    selectedFile = this.model.get('selectedFile'),
-                    oldInput = this.$("input[type=file]").get(0);
-                BaseModal.prototype.renderContents.call(this);
+                var selectedFile = this.model.get('selectedFile');
+                var mimeTypes = this.model.get('mimeTypes');
+                var self = this;
+
+                function isSelectedFileAnImage() {
+                    //Check: Is selected file an image object and have dimensions.
+                    return (selectedFile && $.inArray(selectedFile.type, ["image/gif", "image/jpeg", "image/png"]) > -1)
+                }
+
+                //Selected file is an image and have dimensions to measure.
+                if (isSelectedFileAnImage() && !$.isEmptyObject(this.model.get('imageDimensions'))) {
+                    this.loadImageFile(selectedFile, function(uploadedImage) {
+                        //Checking validity for image dimensions.
+                        var isValid = self.model.isValid({uploadedImage: uploadedImage});
+                        self.renderContentsToPrompt(isValid, selectedFile);
+                    });
+                }
+                else {
+                    var isValid = this.model.isValid();
+                    this.renderContentsToPrompt(isValid, selectedFile);
+                }
+            },
+
+            renderContentsToPrompt: function(isValid, selectedFile) {
+                var oldInput = this.$("input[type=file]").get(0);
+                    BaseModal.prototype.renderContents.call(this);
                 // Ideally, we'd like to tell the browser to pre-populate the
                 // <input type="file"> with the selectedFile if we have one -- but
                 // browser security prohibits that. So instead, we'll swap out the
