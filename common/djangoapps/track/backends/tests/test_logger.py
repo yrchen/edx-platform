@@ -47,6 +47,22 @@ class TestLoggerBackend(TestCase):
         self.assertEqual(saved_events[0], unpacked_event)
         self.assertEqual(saved_events[1], unpacked_event)
 
+    def test_logger_backend_unicode_character(self):
+        """
+        When event information contain unicode characters
+        """
+        self.handler.reset()
+
+        event = {'string': '\xd3 \xe9 \xf1'}
+
+        self.backend.send(event)
+
+        saved_events = [json.loads(e) for e in self.handler.messages['info']]
+
+        unpacked_event = {'string': u'\xd3 \xe9 \xf1'}
+
+        self.assertEqual(saved_events[0], unpacked_event)
+
 
 class MockLoggingHandler(logging.Handler):
     """
