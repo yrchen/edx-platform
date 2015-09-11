@@ -9,6 +9,7 @@ Tests that CSV grade report generation works with unicode emails.
 import ddt
 from mock import Mock, patch
 import tempfile
+from openedx.core.djangoapps.course_groups import cohorts
 import unicodecsv
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
@@ -681,7 +682,30 @@ class TestProblemReportCohortedContent(TestReportMixin, ContentGroupTestCase, In
             group_access={self.course.user_partitions[0].id: [self.course.user_partitions[0].groups[1].id]}
         )
 
-    def test_cohort_content(self):
+    @patch('courseware.grades.MaxScoresCache.get')
+    def test_cohort_content(self, max_scores_cache_get):
+        # Mock the max_scores_cache
+        max_scores_cache_get.return_value = 1
+
+        # Course is cohorted
+        self.assertTrue(cohorts.is_course_cohorted(self.course.id))
+
+        # Verify user groups
+        self.assertEquals(
+            cohorts.get_cohort(self.alpha_user, self.course.id).id,
+            self.course.user_partitions[0].groups[0].id,
+            "alpha_user should be assigned to the correct cohort"
+        )
+        self.assertEquals(
+            cohorts.get_cohort(self.beta_user, self.course.id).id,
+            self.course.user_partitions[0].groups[1].id,
+            "beta_user should be assigned to the correct cohort"
+        )
+
+        # Verify user enrollment
+        self.assertTrue(CourseEnrollment.is_enrolled(self.alpha_user, self.course.id))
+        self.assertTrue(CourseEnrollment.is_enrolled(self.beta_user, self.course.id))
+
         self.submit_student_answer(self.alpha_user.username, u'Pröblem0', ['Option 1', 'Option 1'])
         resp = self.submit_student_answer(self.alpha_user.username, u'Pröblem1', ['Option 1', 'Option 1'])
         self.assertEqual(resp.status_code, 404)
