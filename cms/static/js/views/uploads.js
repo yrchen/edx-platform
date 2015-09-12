@@ -14,6 +14,7 @@ define(["jquery", "underscore", "gettext", "js/views/modals/base_modal", "jquery
             }),
 
             initialize: function() {
+                this.uploadedImageFile = null;
                 BaseModal.prototype.initialize.call(this);
                 this.events = _.extend({}, BaseModal.prototype.events, this.events);
                 this.template = this.loadTemplate("upload-dialog");
@@ -26,40 +27,27 @@ define(["jquery", "underscore", "gettext", "js/views/modals/base_modal", "jquery
                 BaseModal.prototype.addActionButtons.call(this);
             },
 
-            loadImageFile: function (file, callback) {
+            isSelectedFileAnImage: function(selectedFile) {
+                //Check: Is selected file an image object.
+                return (selectedFile && $.inArray(selectedFile.type, ["image/gif", "image/jpeg", "image/png"]) > -1)
+            },
+
+            loadImageFile: function (file) {
                 // Load an image file.
+                var deferred = $.Deferred();
                 var image = new Image();
-                image.onload = function() { callback(image) };
+                image.onload = function() {
+                    deferred.resolve(image);
+                };
                 image.src = URL.createObjectURL(file);
+                return deferred.promise();
             },
 
             renderContents: function() {
-                var selectedFile = this.model.get('selectedFile');
-                var mimeTypes = this.model.get('mimeTypes');
-                var self = this;
-
-                function isSelectedFileAnImage() {
-                    //Check: Is selected file an image object and have dimensions.
-                    return (selectedFile && $.inArray(selectedFile.type, ["image/gif", "image/jpeg", "image/png"]) > -1)
-                }
-
-                //Selected file is an image and have dimensions to measure.
-                if (isSelectedFileAnImage() && !$.isEmptyObject(this.model.get('imageDimensions'))) {
-                    this.loadImageFile(selectedFile, function(uploadedImage) {
-                        //Checking validity for image dimensions.
-                        var isValid = self.model.isValid({uploadedImage: uploadedImage});
-                        self.renderContentsToPrompt(isValid, selectedFile);
-                    });
-                }
-                else {
-                    var isValid = this.model.isValid();
-                    this.renderContentsToPrompt(isValid, selectedFile);
-                }
-            },
-
-            renderContentsToPrompt: function(isValid, selectedFile) {
-                var oldInput = this.$("input[type=file]").get(0);
-                    BaseModal.prototype.renderContents.call(this);
+                var isValid = this.model.isValid({uploadedImage: this.uploadedImageFile}),
+                    selectedFile = this.model.get('selectedFile'),
+                    oldInput = this.$("input[type=file]").get(0);
+                BaseModal.prototype.renderContents.call(this);
                 // Ideally, we'd like to tell the browser to pre-populate the
                 // <input type="file"> with the selectedFile if we have one -- but
                 // browser security prohibits that. So instead, we'll swap out the
@@ -92,13 +80,30 @@ define(["jquery", "underscore", "gettext", "js/views/modals/base_modal", "jquery
 
             selectFile: function(e) {
                 var selectedFile = e.target.files[0] || null;
-                this.model.set({
-                    selectedFile: selectedFile
-                });
-                // This change event triggering necessary for FireFox, because the browser don't
-                // consider change of File object (file input field) as a change in model.
-                if (selectedFile && $.isEmptyObject(this.model.changed)){
-                    this.model.trigger('change');
+                var self = this;
+                // If the selected file is an image and model has any restriction on image dimension, Then load the
+                // image object to get its attributes e.g. width & height.
+                if(this.isSelectedFileAnImage(selectedFile) && !$.isEmptyObject(this.model.get('imageDimensions'))) {
+                    $.when(this.loadImageFile(selectedFile))
+                        .done(function (uploadedImage) {
+                            self.uploadedImageFile = uploadedImage;
+                            setFileToModel();
+                        });
+                }
+                else {
+                    setFileToModel();
+                }
+
+                function setFileToModel() {
+                    //Update the model with selected file.
+                    self.model.set({
+                        selectedFile: selectedFile
+                    });
+                    // This change event triggering necessary for FireFox, because the browser don't
+                    // consider change of File object (file input field) as a change in model.
+                    if (selectedFile && $.isEmptyObject(self.model.changed)) {
+                        self.model.trigger('change');
+                    }
                 }
             },
 
