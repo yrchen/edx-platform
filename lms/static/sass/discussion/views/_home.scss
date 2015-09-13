@@ -1,166 +1,162 @@
-// discussion - home layout
+// discussion - views - home layout
 // ====================
 
 // home - layout
-.container .discussion-body {
+.container .view-discussion-home {
+  padding: ($baseline*2) ($baseline*2) ($baseline/2);
 
-  .blank-slate {
-      padding: 40px 40px 10px;
+  section {
+    border-bottom: 1px solid $gray-l3;
+  }
 
-      section {
-        border-bottom: 1px solid $gray-l3;
+  .label {
+    @extend %t-copy-sub2;
+    display: block;
+  }
+
+  .label-settings {
+    padding-top: $baseline;
+    padding-bottom: ($baseline/2);
+    text-transform: uppercase;
+  }
+
+  .home-header {
+    margin: 0;
+  }
+
+  .home-title {
+    @extend %t-title5;
+    color: $black;
+    margin-bottom: ($baseline/4);
+  }
+  .home-description {
+    @extend %t-copy-sub2;
+    margin-bottom: ($baseline/2);
+  }
+  .home-stats {
+    padding: $baseline 0;
+
+    .label-area {
+      display: inline-block;
+      min-width: ($baseline*5);
+      width: 25%;
+      vertical-align: middle;
+
+      .profile-link {
+        font-weight: 700;
       }
+    }
 
-      .label {
-        display: block;
-        font-size: 12px;
-      }
+    .stats-grouping {
+      @include padding-left($baseline);
+      display: inline-block;
+      width: 70%;
 
-      .label-settings {
-        padding-top: $baseline;
-        padding-bottom: $baseline/2;
-        text-transform: uppercase;
-      }
+      .profile-stat {
+        @extend %t-copy-sub2;
+        display: inline-block;
+        width: 32.5%;
+        vertical-align: middle;
 
-      .home-header {
-        margin: 0;
-      }
-
-      .home-title {
-        font-size: 18px;
-        color: $black;
-        margin-bottom: ($baseline/4);
-      }
-      .home-description {
-        font-size: 12px;
-        line-height: 1;
-        margin-bottom: $baseline/2;
-      }
-      .home-stats {
-        padding: $baseline 0;
-
-        .label-area {
+        .count {
+          @extend %t-title4;
           display: inline-block;
-          min-width: $baseline*5;
-          width: 25%;
+          padding: 0 ($baseline/2);
           vertical-align: middle;
-
-          .profile-link {
-            font-weight: 700;
-          }
         }
 
-        .stats-grouping {
+        .profile-stat-label{
+          vertical-align: middle;
+        }
+      }
+    }
+  }
+
+  .home-helpgrid {
+    border-bottom: none;
+    border-radius: 3px;
+    border: 1px solid $gray-l2;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .15);
+  }
+
+  .helpgrid-row {
+    border-bottom: 1px solid $gray-l2;
+
+    .row-title {
+      padding: ($baseline*1.5) $baseline;
+      background-color: #dedede;
+      font-size: 12px;
+    }
+
+    .row-item-full, .row-item {
+      font-size: 12px;
+      padding: 0px $baseline/2;
+      width: 26%;
+      vertical-align: middle;
+
+      .icon {
+        padding: 0 ($baseline/2);
+        font-size: 24px;
+        vertical-align: middle;
+        display: table-cell;
+      }
+
+      .fa-stack .icon {
+        padding: 0 ($baseline/2);
+      }
+
+      .row-description {
+        vertical-align: middle;
+        display: table-cell;
+      }
+    }
+
+    .row-item-full {
+
+      .notification-checkbox {
+        display: inline-block;
+        @include padding($baseline/4, 0, $baseline/2, 0);
+        @include margin-right($baseline/2);
+        border-radius: 5px;
+        border: 1px solid gray;
+
+        .email-setting {
           display: inline-block;
-          width: 70%;
-          padding-left: $baseline;
-
-          .profile-stat {
-            display: inline-block;
-            width: 32.5%;
-            vertical-align: middle;
-            font-size: 12px;
-
-            .count {
-              display: inline-block;
-              font-size: 28px;
-              padding: 0 $baseline/2;
-              vertical-align: middle;
-            }
-
-            .profile-stat-label{
-              vertical-align: middle;
-            }
-          }
-        }
-      }
-
-      .home-helpgrid {
-        border-bottom: none;
-        border-radius: 3px;
-        border: 1px solid $gray-l2;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, .15);
-      }
-    }
-
-    .helpgrid-row {
-        border-bottom: 1px solid $gray-l2;
-
-        .row-title {
-          padding: 30px $baseline;
-          background-color: #dedede;
-          font-size: 12px;
-        }
-
-        .row-item-full, .row-item {
-          font-size: 12px;
-          padding: 0px $baseline/2;
-          width: 26%;
+          text-align: center;
           vertical-align: middle;
-
-          .icon {
-            padding: 0 $baseline/2;
-            font-size: 24px;
-            vertical-align: middle;
-            display: table-cell;
-          }
-
-          .fa-stack .icon {
-            padding: 0 $baseline/2;
-          }
-
-          .row-description {
-            vertical-align: middle;
-            display: table-cell;
-          }
+          @include margin-left($baseline/2);
         }
 
-        .row-item-full {
+        .icon {
+          display: inline-block;
+        }
 
-          .notification-checkbox {
-            display: inline-block;
-            padding: $baseline/4 0 $baseline/2 0;
-            @include margin-right($baseline/2);
-            border-radius: 5px;
-            border: 1px solid gray;
-
-            .email-setting {
-              display: inline-block;
-              text-align: center;
-              vertical-align: middle;
-              @include margin-left($baseline/2);
-            }
-
-            .icon {
-              display: inline-block;
-            }
-
-            .email-setting:checked ~ .icon {
-              color: $green;
-            }
-          }
-
-          .row-description {
-            display: inline-block;
-            width:80%;
-          }
+        .email-setting:checked ~ .icon {
+          color: $green;
         }
       }
 
-    .helpgrid-row-navigation {
-      .fa-bars {color: $light-gray;}
-      .fa-search {color: $light-gray;}
-      .fa-sort {color: $light-gray;}
+      .row-description {
+        display: inline-block;
+        width:80%;
+      }
     }
+  }
 
-    .helpgrid-row-participation {
-      .fa-plus {color: $green;}
-      .fa-flag {color: $pink;}
-      .fa-star {color: $blue;}
-    }
+  .helpgrid-row-navigation {
+    .fa-bars {color: $light-gray;}
+    .fa-search {color: $light-gray;}
+    .fa-sort {color: $light-gray;}
+  }
 
-    .helpgrid-row-notification {
-      .fa-square {color: $green;}
-      .fa-envelope {color: $light-gray;}
-    }
+  .helpgrid-row-participation {
+    .fa-plus {color: $green;}
+    .fa-flag {color: $pink;}
+    .fa-star {color: $blue;}
+  }
+
+  .helpgrid-row-notification {
+    .fa-square {color: $green;}
+    .fa-envelope {color: $light-gray;}
+  }
 }
