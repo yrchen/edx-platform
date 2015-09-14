@@ -23,43 +23,44 @@ from django.core.urlresolvers import reverse
         <h3 class="title">${_("{studio_name} Documentation").format(studio_name=settings.STUDIO_NAME)}</h3>
 
         <div class="copy">
-           <p>${_("You can click Help in the upper right corner of any page to get more information about the page you're on. You can also use the links below to download the Building and Running an {platform_name} Course PDF file, to go to the {platform_name} Author Support site, or to enroll in edX101.").format(platform_name=settings.PLATFORM_NAME)}</p>
-        </div>
-
-      <ul class="list-actions">
-          <li class="action-item js-help-pdf">
-            <a href="${get_online_help_info(online_help_token)['pdf_url']}" target="_blank" rel="external" class="action action-primary">${_("Building and Running an {platform_name} Course PDF").format(platform_name=settings.PLATFORM_NAME)}</a>
-          </li>
-
-        % if settings.TENDER_DOMAIN:
-          <li class="action-item">
-            <a href="http://${settings.TENDER_DOMAIN}" rel="external" class="action action-primary">${_("{studio_name} Author Support").format(studio_name=settings.STUDIO_NAME)}</a>
-            <span class="tip">${_("{studio_name} Author Support").format(studio_name=settings.STUDIO_NAME)}</span>
-          </li>
-        % endif
-
-        <li class="action-item">
-          <a href="https://www.edx.org/course/overview-creating-edx-course-edx-edx101#.VO4eaLPF-n1" rel="external" class="action action-primary">${_("Enroll in edX101")}</a>
-          <span class="tip">${_("How to use {studio_name} to build your course").format(studio_name=settings.STUDIO_NAME)}</span>
-        </li>
-      </ul>
-      </div>
-
-    % if settings.TENDER_DOMAIN:
-      <div class="feedback">
-        <h3 class="title">${_("Request help with {studio_name}").format(studio_name=settings.STUDIO_NAME)}</h3>
-
-        <div class="copy">
-           <p>${_("Have problems, questions, or suggestions about {studio_name}?").format(studio_name=settings.STUDIO_NAME)}</p>
+          <p>${_("You can click Help in the upper right corner of any page to get more information about the page you're on. You can also use the links below to download the Building and Running an {platform_name} Course PDF file, to go to the {platform_name} Author Support site, or to enroll in edX101.").format(platform_name=settings.PLATFORM_NAME)}</p>
         </div>
 
         <ul class="list-actions">
-          <li class="action-item">
-            <a href="http://${settings.TENDER_DOMAIN}/discussion/new" class="action action-primary" title="${_("Use our feedback tool, Tender, to share your feedback")}"><i class="icon fa fa-comments"></i>${_("Contact Us")}</a>
+          <li class="action-item js-help-pdf">
+            <a href="http://docs.edx.org" target="_blank" rel="external" class="action action-primary">${_("edX Documentation")}</a>
           </li>
-        </ul>
+
+        % if settings.FEATURES.get('IS_EDX_DOMAIN', False):
+          <li class="action-item">
+            <a href="https://partners.edx.org" rel="external" class="action action-primary">${_("edX Partner Portal")}</a>
+            <!-- <span class="tip">${_("{studio_name} Author Support").format(studio_name=settings.STUDIO_NAME)}</span> -->
+          </li>
+        % else:
+          <li class="action-item">
+            <a href="https://open.edx.org" rel="external" class="action action-primary">${_("Open edX Portal")}</a>
+            <!-- <span class="tip">${_("{studio_name} Author Support").format(studio_name=settings.STUDIO_NAME)}</span> -->
+          </li>
+        % endif
+
+          <li class="action-item">
+            <a href="https://www.edx.org/course/overview-creating-edx-course-edx-edx101#.VO4eaLPF-n1" rel="external" class="action action-primary">${_("Enroll in edX101")}</a>
+            <span class="tip">${_("How to use {studio_name} to build your course").format(studio_name=settings.STUDIO_NAME)}</span>
+          </li>
+
+          <li class="action-item">
+            <a href="https://www.edx.org/course/creating-course-edx-studio-edx-studiox" rel="external" class="action action-primary">${_("Enroll in StudioX")}</a>
+            <span class="tip">${_("How to use {studio_name} to build your course").format(studio_name=settings.STUDIO_NAME)}</span>
+          </li>
+
+        % if 'PARTNER_SUPPORT_EMAIL' in settings.FEATURES:
+          <li class="action-item">
+            <a href="mailto:${settings.FEATURES['PARTNER_SUPPORT_EMAIL']}" rel="external" class="action action-primary">${_("Contact Us")}</a>
+            <span class="tip"></span>
+          </li>
+        % endif
+        '</ul>
       </div>
-    % endif
     </section>
   </div>
 </div>
