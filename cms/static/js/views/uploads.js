@@ -29,7 +29,7 @@ define(["jquery", "underscore", "gettext", "js/views/modals/base_modal", "jquery
 
             isSelectedFileAnImage: function(selectedFile) {
                 //Check: Is selected file an image object.
-                return (selectedFile && $.inArray(selectedFile.type, ["image/gif", "image/jpeg", "image/png"]) > -1)
+                return (selectedFile && $.inArray(selectedFile.type, ["image/gif", "image/jpeg", "image/png"]) > -1);
             },
 
             loadImageFile: function (file) {
