@@ -506,7 +506,6 @@ class Signatory(object):
                 'Upload dialog is visible after uploading an invalid image'
             ).fulfill()
 
-
     ################
     # Wait Actions
     ################
